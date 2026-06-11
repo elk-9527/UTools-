@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code 启动器</title>
+</head>
+<body>
+  <script>
+    // 监听 uTools 插件进入事件
+    window.utools.onPluginEnter(({ code, type, payload }) => {
+      if (code === 'claude-skip-permissions') {
+        // 调用 preload 暴露的 Node.js 方法打开 CMD
+        window.openClaudeWithSkipPermissions();
+        // 短暂延迟后退出插件，确保子进程已启动
+        setTimeout(() => {
+          window.utools.outPlugin();
+        }, 150);
+      }
+    });
+  </script>
+</body>
+</html>

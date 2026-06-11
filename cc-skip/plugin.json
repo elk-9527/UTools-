@@ -1,0 +1,13 @@
+{
+  "main": "index.html",
+  "logo": "logo.png",
+  "preload": "preload.js",
+  "features": [
+    {
+      "code": "claude-skip-permissions",
+      "explain": "快速打开CMD并输入claude --dangerously-skip-permissions以进入Claude Code最高权限模式",
+      "cmds": ["claude最高权限", "claude跳过权限", "ClaudeSkip", "cc-skip"],
+      "mainHide": true
+    }
+  ]
+}

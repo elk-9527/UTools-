@@ -1,0 +1,19 @@
+# IDE / 编辑器
+.vscode/
+.idea/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code
+.claude/
+
+# 临时 / 测试文件
+*.tmp
+*.bak
+project1/
+参考文档.md
+claude-code-launcher/
+*.upx
