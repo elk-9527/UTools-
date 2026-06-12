@@ -6,12 +6,12 @@
 /* CSS 变量 - 主题色 */
 :root {
   /* 深色主题（默认） — 冷靛蓝倾向 */
-  --bg-primary: rgba(22, 22, 35, 0.50);
-  --bg-secondary: rgba(30, 30, 48, 0.40);
-  --bg-card: rgba(255, 255, 255, 0.06);
-  --bg-card-hover: rgba(255, 255, 255, 0.10);
-  --border-card: rgba(255, 255, 255, 0.16);
-  --border-card-hover: rgba(255, 255, 255, 0.24);
+  --bg-primary: rgba(22, 22, 35, 0.45);
+  --bg-secondary: rgba(30, 30, 48, 0.35);
+  --bg-card: rgba(255, 255, 255, 0.07);
+  --bg-card-hover: rgba(255, 255, 255, 0.12);
+  --border-card: rgba(255, 255, 255, 0.14);
+  --border-card-hover: rgba(255, 255, 255, 0.22);
   --border-subtle: rgba(255, 255, 255, 0.06);
   --text-primary: rgba(255, 255, 255, 0.92);
   --text-secondary: rgba(255, 255, 255, 0.62);
@@ -35,51 +35,51 @@
 /* 浅色主题 — 跟随系统（仅在未手动设置 data-theme 时生效） */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
-    --bg-primary: rgba(245, 242, 248, 0.55);
-    --bg-secondary: rgba(238, 235, 244, 0.45);
-    --bg-card: rgba(255, 255, 255, 0.55);
-    --bg-card-hover: rgba(255, 255, 255, 0.72);
-    --border-card: rgba(0, 0, 0, 0.10);
-    --border-card-hover: rgba(0, 0, 0, 0.18);
-    --border-subtle: rgba(0, 0, 0, 0.05);
+    --bg-primary: rgba(245, 242, 248, 0.50);
+    --bg-secondary: rgba(238, 235, 244, 0.40);
+    --bg-card: rgba(255, 255, 255, 0.45);
+    --bg-card-hover: rgba(255, 255, 255, 0.65);
+    --border-card: rgba(0, 0, 0, 0.08);
+    --border-card-hover: rgba(0, 0, 0, 0.15);
+    --border-subtle: rgba(0, 0, 0, 0.04);
     --text-primary: rgba(0, 0, 0, 0.88);
     --text-secondary: rgba(0, 0, 0, 0.55);
     --text-tertiary: rgba(0, 0, 0, 0.35);
     --accent: rgba(40, 100, 220, 0.75);
     --accent-glow: rgba(40, 100, 220, 0.18);
-    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.10);
-    --shadow-card-hover: 0 12px 40px rgba(0, 0, 0, 0.16);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --shadow-card-hover: 0 12px 40px rgba(0, 0, 0, 0.14);
     --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 }
 
 /* 手动覆盖 — 浅色 */
 :root[data-theme="light"] {
-  --bg-primary: rgba(245, 242, 248, 0.55);
-  --bg-secondary: rgba(238, 235, 244, 0.45);
-  --bg-card: rgba(255, 255, 255, 0.55);
-  --bg-card-hover: rgba(255, 255, 255, 0.72);
-  --border-card: rgba(0, 0, 0, 0.10);
-  --border-card-hover: rgba(0, 0, 0, 0.18);
-  --border-subtle: rgba(0, 0, 0, 0.05);
+  --bg-primary: rgba(245, 242, 248, 0.50);
+  --bg-secondary: rgba(238, 235, 244, 0.40);
+  --bg-card: rgba(255, 255, 255, 0.45);
+  --bg-card-hover: rgba(255, 255, 255, 0.65);
+  --border-card: rgba(0, 0, 0, 0.08);
+  --border-card-hover: rgba(0, 0, 0, 0.15);
+  --border-subtle: rgba(0, 0, 0, 0.04);
   --text-primary: rgba(0, 0, 0, 0.88);
   --text-secondary: rgba(0, 0, 0, 0.55);
   --text-tertiary: rgba(0, 0, 0, 0.35);
   --accent: rgba(40, 100, 220, 0.75);
   --accent-glow: rgba(40, 100, 220, 0.18);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.10);
-  --shadow-card-hover: 0 12px 40px rgba(0, 0, 0, 0.16);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 12px 40px rgba(0, 0, 0, 0.14);
   --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 /* 手动覆盖 — 深色（与 :root 默认相同，显式写一份） */
 :root[data-theme="dark"] {
-  --bg-primary: rgba(22, 22, 35, 0.50);
-  --bg-secondary: rgba(30, 30, 48, 0.40);
-  --bg-card: rgba(255, 255, 255, 0.06);
-  --bg-card-hover: rgba(255, 255, 255, 0.10);
-  --border-card: rgba(255, 255, 255, 0.16);
-  --border-card-hover: rgba(255, 255, 255, 0.24);
+  --bg-primary: rgba(22, 22, 35, 0.45);
+  --bg-secondary: rgba(30, 30, 48, 0.35);
+  --bg-card: rgba(255, 255, 255, 0.07);
+  --bg-card-hover: rgba(255, 255, 255, 0.12);
+  --border-card: rgba(255, 255, 255, 0.14);
+  --border-card-hover: rgba(255, 255, 255, 0.22);
   --border-subtle: rgba(255, 255, 255, 0.06);
   --text-primary: rgba(255, 255, 255, 0.92);
   --text-secondary: rgba(255, 255, 255, 0.62);
@@ -91,8 +91,11 @@
   --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* 窗口级毛玻璃背景 */
+/* ============================================
+   窗口级液态玻璃背景（直接给 body）
+   ============================================ */
 body {
+  /* 半透明基底 — 毛玻璃生效的前提 */
   background: var(--bg-card);
   backdrop-filter: var(--glass-blur-strong) var(--glass-saturate) var(--glass-brightness);
   -webkit-backdrop-filter: var(--glass-blur-strong) var(--glass-saturate) var(--glass-brightness);
@@ -100,8 +103,43 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 20px rgba(100, 160, 255, 0.06),
+    0 0 24px rgba(100, 160, 255, 0.06),
     var(--shadow-card);
+  position: relative;
+}
+
+/* 液态玻璃光泽叠加 — 径向高光 + 线性渐变 */
+body::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-window);
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 25%,
+      rgba(100, 160, 255, 0.03) 50%,
+      rgba(255, 255, 255, 0.01) 75%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 窗口边框光晕 — 双层光感 */
+body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-window);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 20px rgba(100, 160, 255, 0.06);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* 滚动条 */

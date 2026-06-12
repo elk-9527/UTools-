@@ -19,7 +19,7 @@
       font-size: 14px;
       color: var(--text-primary);
       user-select: none; -webkit-user-select: none;
-      background: transparent;
+      /* 不覆盖 background — 由 style.css 提供毛玻璃 */
     }
     /* 拖拽条 */
     #drag-handle {
@@ -44,8 +44,10 @@
       background: rgba(255,255,255,0.06); color: var(--text-secondary);
       cursor: pointer; font-size: 11px;
       display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
     }
     .action-btn:hover { background: rgba(255,100,100,0.25); color: #ff6b6b; }
+    .action-btn.zorder-btn:hover { background: rgba(100,160,255,0.20); color: var(--accent); }
     /* 内容区 */
     #module-content {
       position: absolute; top: 28px; left: 0; right: 0; bottom: 0;
@@ -74,6 +76,7 @@
     <span class="module-icon" id="module-icon">📦</span>
     <span class="module-title" id="module-title">加载中...</span>
     <div class="actions">
+      <button class="action-btn zorder-btn" id="zorder-btn" title="窗口层级">📌</button>
       <button class="action-btn" id="remove-btn" title="关闭模块">✕</button>
     </div>
   </div>
@@ -184,6 +187,52 @@
         module.destroy();
         try { window.close(); } catch(e) {}
       });
+
+      // --- 层级按钮（右键或左键弹出层级菜单） ---
+      const zorderBtn = document.getElementById('zorder-btn');
+      const ZORDER_ICONS = { top: '📌', normal: '📋', bottom: '⬇️' };
+      zorderBtn.addEventListener('click', (e) => {
+        // 读取当前层级
+        const settings = utools.db.get('widget-settings') || {};
+        const curZ = settings.zOrder || 'top';
+        // 移除旧菜单
+        const oldMenu = document.querySelector('.zorder-menu');
+        if (oldMenu) { oldMenu.remove(); return; }
+        const menu = document.createElement('div');
+        menu.className = 'context-menu zorder-menu';
+        menu.style.left = (e.x - 140) + 'px';
+        menu.style.top = (e.y + 8) + 'px';
+        const zLabels = { top: '🔝 顶层 (始终在前)', normal: '📋 正常', bottom: '⬇️ 底层 (贴桌面)' };
+        menu.innerHTML = Object.entries(zLabels).map(([k, v]) =>
+          `<div class="menu-item ${k === curZ ? 'active' : ''}" data-z="${k}">${v} ${k === curZ ? '✓' : ''}</div>`
+        ).join('');
+        document.body.appendChild(menu);
+        menu.addEventListener('click', (ev) => {
+          const item = ev.target.closest('.menu-item');
+          if (!item) return;
+          const val = item.dataset.z;
+          // 持久化
+          const ex = utools.db.get('widget-settings') || {};
+          const doc = { _id: 'widget-settings', theme: ex.theme || 'auto', zOrder: val };
+          if (ex && ex._rev) doc._rev = ex._rev;
+          utools.db.put(doc);
+          // 通知父窗口（index.html）更新层级
+          if (window.utools && utools.sendToParent) {
+            utools.sendToParent('zorder-change', { zOrder: val });
+          }
+          // 也保存到 window 变量供本窗口读取
+          window.__zOrder = val;
+          zorderBtn.textContent = ZORDER_ICONS[val] || '📌';
+          menu.remove();
+        });
+        const closeHandler = (ev) => {
+          if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('click', closeHandler); }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 0);
+      });
+      // 初始化层级图标
+      const initSettings = utools.db.get('widget-settings') || {};
+      zorderBtn.textContent = ZORDER_ICONS[initSettings.zOrder || 'top'] || '📌';
 
       // --- 主题适配 ---
       const st = utools.db.get('widget-settings') || {};
