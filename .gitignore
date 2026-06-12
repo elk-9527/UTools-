@@ -13,7 +13,4 @@ desktop.ini
 # 临时 / 测试文件
 *.tmp
 *.bak
-project1/
 参考文档.md
-claude-code-launcher/
-*.upx
