@@ -1,0 +1,193 @@
+/* ============================================
+   天气模块样式
+   ============================================ */
+
+.weather-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.weather-icon {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.weather-temp {
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 200;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.weather-temp sup {
+  font-size: 18px;
+  font-weight: 400;
+  vertical-align: super;
+}
+
+.weather-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.weather-details {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.weather-detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.weather-detail .label {
+  opacity: 0.7;
+}
+
+.weather-city {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.weather-city:hover {
+  color: var(--text-secondary);
+}
+
+.weather-city .edit-hint {
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.weather-city:hover .edit-hint {
+  opacity: 0.6;
+}
+
+.weather-forecast {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.forecast-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  min-width: 0;
+}
+
+.forecast-day .day-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.forecast-day .day-icon {
+  font-size: 20px;
+}
+
+.forecast-day .day-temps {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.forecast-day .day-temps .high {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.forecast-day .day-temps .low {
+  color: var(--text-tertiary);
+}
+
+.weather-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* 离线提示条 */
+.weather-offline-bar {
+  font-size: 10px; color: var(--text-tertiary);
+  text-align: center; padding: 3px 6px; margin-bottom: 6px;
+  border-radius: 6px; background: rgba(255, 200, 60, 0.10);
+}
+
+/* 城市设置弹窗 */
+.weather-settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.weather-settings-dialog {
+  background: rgba(30, 30, 44, 0.95);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 20px 24px;
+  min-width: 280px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.weather-settings-dialog h3 {
+  font-size: 15px;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.weather-settings-dialog .input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.weather-settings-dialog .input-row .input {
+  flex: 1;
+}
+
+.weather-settings-dialog .hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+}

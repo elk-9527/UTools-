@@ -1,0 +1,16 @@
+{
+  "main": "index.html",
+  "logo": "logo.png",
+  "preload": "preload.js",
+  "pluginSetting": {
+    "single": true
+  },
+  "features": [
+    {
+      "code": "desktop-widget",
+      "explain": "Win11桌面组件 — 天气、时钟、日历、待办、快捷启动，毛玻璃悬浮窗",
+      "cmds": ["桌面组件", "桌面小工具", "DesktopWidget", "Widget"],
+      "mainHide": true
+    }
+  ]
+}

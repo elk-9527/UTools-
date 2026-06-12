@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>桌面组件启动器</title>
+</head>
+<body>
+  <script>
+    /**
+     * index.html — 插件入口
+     * 职责：创建悬浮窗 → 页面加载完成 → 显示窗口 → 退出主窗口
+     */
+    let widgetWindow = null;
+
+    utools.onPluginEnter(({ code }) => {
+      if (code !== 'desktop-widget') return;
+
+      // 防止重复创建窗口
+      if (widgetWindow && !widgetWindow.isDestroyed()) {
+        widgetWindow.show();
+        widgetWindow.focus();
+        utools.outPlugin();
+        return;
+      }
+
+      try {
+        const screenSize = window.widgetServices.getScreenSize();
+        const dpr = window.devicePixelRatio || 1;
+        const width = 820;
+        const height = 580;
+        const x = Math.max(0, screenSize.width - width - 40);
+        const y = 60;
+
+        console.log('[DesktopWidget] 正在创建悬浮窗...', { x, y, width, height, dpr });
+
+        // createBrowserWindow 第三个参数是页面加载完成后的回调
+        widgetWindow = utools.createBrowserWindow(
+          'widget.html',
+          {
+            show: false,
+            x: x,
+            y: y,
+            width: width,
+            height: height,
+            minWidth: 420,
+            minHeight: 320,
+            frame: false,
+            transparent: true,
+            alwaysOnTop: true,
+            skipTaskbar: true,
+            resizable: true,
+            hasShadow: false,
+            thickFrame: false,
+            webPreferences: {
+              preload: 'preload.js',
+              nodeIntegration: false,
+              contextIsolation: true,
+              sandbox: false
+            }
+          },
+          // 页面加载完成回调
+          () => {
+            console.log('[DesktopWidget] 悬浮窗页面加载完成，正在显示...');
+            if (widgetWindow && !widgetWindow.isDestroyed()) {
+              widgetWindow.show();
+              widgetWindow.setAlwaysOnTop(true, 'screen-saver');
+              widgetWindow.focus();
+              console.log('[DesktopWidget] 悬浮窗已显示');
+            }
+          }
+        );
+
+        if (!widgetWindow) {
+          console.error('[DesktopWidget] 创建悬浮窗失败：返回 null');
+          utools.showNotification('桌面组件创建失败，请重试');
+        } else {
+          console.log('[DesktopWidget] createBrowserWindow 已调用，等待页面加载...');
+        }
+      } catch (err) {
+        console.error('[DesktopWidget] 创建悬浮窗异常:', err);
+        utools.showNotification('桌面组件启动失败: ' + err.message);
+      }
+
+      // 用 hideMainWindow 代替 outPlugin（让主窗口隐藏，不销毁进程）
+      utools.hideMainWindow();
+    });
+
+    // 插件退出时清理
+    utools.onPluginOut((isKill) => {
+      console.log('[DesktopWidget] 插件退出, isKill:', isKill);
+      if (isKill && widgetWindow && !widgetWindow.isDestroyed()) {
+        widgetWindow.close();
+        widgetWindow = null;
+      }
+    });
+  </script>
+</body>
+</html>
