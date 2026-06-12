@@ -19,9 +19,14 @@ class CalendarModule extends WidgetModule {
   render(container) {
     super.render(container);
     this._renderCalendar();
-    // 监听待办变化，重绘日历小圆点
-    this._todoChangedHandler = () => this._renderCalendar();
-    window.addEventListener('todo:changed', this._todoChangedHandler);
+    // 用 db 轮询检测待办变化，跨窗口桥接
+    this._dbSyncTimer = setInterval(() => {
+      const bridge = utools.db.get('todo-bridge');
+      if (bridge && bridge._ts !== this._lastTodoBridgeTs) {
+        this._lastTodoBridgeTs = bridge._ts;
+        this._renderCalendar();
+      }
+    }, 600);
   }
 
   _renderCalendar() {
@@ -118,13 +123,16 @@ class CalendarModule extends WidgetModule {
       this._renderCalendar();
     });
 
-    // 日期点击
+    // 日期点击 → 写入 db 桥接通知待办模块
     this.container.querySelectorAll('.calendar-day:not(.other-month)').forEach(el => {
       el.addEventListener('click', () => {
         const dateStr = el.dataset.date;
         if (!dateStr) return;
-        // 可以通过自定义事件通知待办模块
-        window.dispatchEvent(new CustomEvent('calendar:dateSelect', { detail: { date: dateStr } }));
+        // 写入 db 桥接文档，跨窗口通知待办模块
+        const existing = utools.db.get('calendar-bridge');
+        const doc = { _id: 'calendar-bridge', date: dateStr, ts: Date.now() };
+        if (existing && existing._rev) doc._rev = existing._rev;
+        utools.db.put(doc);
       });
     });
   }
@@ -133,6 +141,7 @@ class CalendarModule extends WidgetModule {
     if (this._todoChangedHandler) {
       window.removeEventListener('todo:changed', this._todoChangedHandler);
     }
+    if (this._dbSyncTimer) { clearInterval(this._dbSyncTimer); }
     super.destroy();
   }
 }

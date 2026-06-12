@@ -21,12 +21,15 @@ class TodoModule extends WidgetModule {
     this._initUI();
     this._loadTodos();
 
-    // 监听日历日期选择
-    this._dateHandler = (e) => {
-      this._filterDate = e.detail.date;
-      this._renderList();
-    };
-    window.addEventListener('calendar:dateSelect', this._dateHandler);
+    // 用 db 轮询检测日历日期选择（跨窗口桥接）
+    this._dbSyncTimer = setInterval(() => {
+      const bridge = utools.db.get('calendar-bridge');
+      if (bridge && bridge._ts !== this._lastBridgeTs) {
+        this._lastBridgeTs = bridge._ts;
+        this._filterDate = bridge.date;
+        this._renderList();
+      }
+    }, 600);
   }
 
   _initUI() {
@@ -80,7 +83,11 @@ class TodoModule extends WidgetModule {
     utools.db.put(doc);
     this._todos.unshift(doc);
     this._renderList();
-    window.dispatchEvent(new CustomEvent('todo:changed'));
+    // 跨窗口通知：写入 db 桥接
+    const existing = utools.db.get('todo-bridge');
+    const bridge = { _id: 'todo-bridge', _ts: Date.now() };
+    if (existing && existing._rev) bridge._rev = existing._rev;
+    utools.db.put(bridge);
   }
 
   _toggleTodo(id) {
@@ -94,7 +101,11 @@ class TodoModule extends WidgetModule {
       return (b.createdAt || 0) - (a.createdAt || 0);
     });
     this._renderList();
-    window.dispatchEvent(new CustomEvent('todo:changed'));
+    // 跨窗口通知
+    const existing = utools.db.get('todo-bridge');
+    const bridge = { _id: 'todo-bridge', _ts: Date.now() };
+    if (existing && existing._rev) bridge._rev = existing._rev;
+    utools.db.put(bridge);
   }
 
   _deleteTodo(id) {
@@ -103,7 +114,11 @@ class TodoModule extends WidgetModule {
     if (doc) utools.db.remove(doc);
     else utools.db.remove(id);
     this._renderList();
-    window.dispatchEvent(new CustomEvent('todo:changed'));
+    // 跨窗口通知
+    const existing = utools.db.get('todo-bridge');
+    const bridge = { _id: 'todo-bridge', _ts: Date.now() };
+    if (existing && existing._rev) bridge._rev = existing._rev;
+    utools.db.put(bridge);
   }
 
   _renderList() {
@@ -156,9 +171,7 @@ class TodoModule extends WidgetModule {
   }
 
   destroy() {
-    if (this._dateHandler) {
-      window.removeEventListener('calendar:dateSelect', this._dateHandler);
-    }
+    if (this._dbSyncTimer) { clearInterval(this._dbSyncTimer); }
     super.destroy();
   }
 }

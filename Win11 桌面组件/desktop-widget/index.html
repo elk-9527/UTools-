@@ -8,89 +8,106 @@
   <script>
     /**
      * index.html — 插件入口
-     * 职责：创建悬浮窗 → 页面加载完成 → 显示窗口 → 退出主窗口
+     * 为每个模块创建独立的桌面悬浮窗（直接呈现在 Win11 桌面上）
      */
-    let widgetWindow = null;
+    const MODULE_CONFIGS = [
+      { id: 'clock',         name: '时钟',   w: 260, h: 160 },
+      { id: 'calendar',      name: '日历',   w: 280, h: 320 },
+      { id: 'weather',       name: '天气',   w: 280, h: 240 },
+      { id: 'todo',          name: '待办',   w: 280, h: 340 },
+      { id: 'quick-launch',  name: '快捷启动', w: 320, h: 240 }
+    ];
+
+    const widgetWindows = {};
+
+    function createWidgetWindow(modConfig) {
+      // 读取已保存的布局
+      const layout = utools.db.get('widget-layout');
+      const saved = layout?.modules?.[modConfig.id];
+      const display = utools.getPrimaryDisplay();
+      const workArea = display.workAreaSize;
+
+      const x = saved?.x ?? Math.min(40 + Math.random() * 200, workArea.width - modConfig.w - 40);
+      const y = saved?.y ?? Math.min(60 + Math.random() * 200, workArea.height - modConfig.h - 60);
+      const w = saved?.w || modConfig.w;
+      const h = saved?.h || modConfig.h;
+
+      console.log(`[DesktopWidget] 创建 ${modConfig.name} 窗口`, { x, y, w, h });
+
+      const win = utools.createBrowserWindow(
+        `widget.html?module=${modConfig.id}`,
+        {
+          show: false,
+          x, y, width: w, height: h,
+          minWidth: 160, minHeight: 100,
+          maxWidth: 600, maxHeight: 600,
+          frame: false,
+          transparent: true,
+          alwaysOnTop: true,
+          skipTaskbar: true,
+          resizable: false,  // 由模块内部 JS 控制缩放
+          hasShadow: false,
+          thickFrame: false,
+          webPreferences: {
+            preload: 'preload.js'
+          }
+        },
+        () => {
+          if (win && !win.isDestroyed()) {
+            win.show();
+            win.setAlwaysOnTop(true, 'screen-saver');
+            console.log(`[DesktopWidget] ${modConfig.name} 窗口已显示`);
+          }
+        }
+      );
+
+      widgetWindows[modConfig.id] = win;
+      return win;
+    }
 
     utools.onPluginEnter(({ code }) => {
       if (code !== 'desktop-widget') return;
 
-      // 防止重复创建窗口
-      if (widgetWindow && !widgetWindow.isDestroyed()) {
-        widgetWindow.show();
-        widgetWindow.focus();
-        utools.outPlugin();
+      // 检查是否已有窗口存活
+      const existingKeys = Object.keys(widgetWindows).filter(k => {
+        const w = widgetWindows[k];
+        return w && !w.isDestroyed();
+      });
+
+      if (existingKeys.length > 0) {
+        // 已有窗口：全部显示并聚焦
+        for (const k of existingKeys) {
+          try { widgetWindows[k].show(); widgetWindows[k].focus(); } catch(e) {}
+        }
+        utools.hideMainWindow();
         return;
       }
 
+      // 首次启动：为每个模块创建独立窗口
       try {
-        const screenSize = window.widgetServices.getScreenSize();
-        const dpr = window.devicePixelRatio || 1;
-        const width = 820;
-        const height = 580;
-        const x = Math.max(0, screenSize.width - width - 40);
-        const y = 60;
-
-        console.log('[DesktopWidget] 正在创建悬浮窗...', { x, y, width, height, dpr });
-
-        // createBrowserWindow 第三个参数是页面加载完成后的回调
-        widgetWindow = utools.createBrowserWindow(
-          'widget.html',
-          {
-            show: false,
-            x: x,
-            y: y,
-            width: width,
-            height: height,
-            minWidth: 420,
-            minHeight: 320,
-            frame: false,
-            transparent: true,
-            alwaysOnTop: true,
-            skipTaskbar: true,
-            resizable: true,
-            hasShadow: false,
-            thickFrame: false,
-            webPreferences: {
-              preload: 'preload.js',
-              nodeIntegration: false,
-              contextIsolation: true,
-              sandbox: false
-            }
-          },
-          // 页面加载完成回调
-          () => {
-            console.log('[DesktopWidget] 悬浮窗页面加载完成，正在显示...');
-            if (widgetWindow && !widgetWindow.isDestroyed()) {
-              widgetWindow.show();
-              widgetWindow.setAlwaysOnTop(true, 'screen-saver');
-              widgetWindow.focus();
-              console.log('[DesktopWidget] 悬浮窗已显示');
-            }
-          }
-        );
-
-        if (!widgetWindow) {
-          console.error('[DesktopWidget] 创建悬浮窗失败：返回 null');
-          utools.showNotification('桌面组件创建失败，请重试');
-        } else {
-          console.log('[DesktopWidget] createBrowserWindow 已调用，等待页面加载...');
+        for (const cfg of MODULE_CONFIGS) {
+          createWidgetWindow(cfg);
         }
       } catch (err) {
-        console.error('[DesktopWidget] 创建悬浮窗异常:', err);
+        console.error('[DesktopWidget] 创建窗口异常:', err);
         utools.showNotification('桌面组件启动失败: ' + err.message);
       }
 
-      // 用 hideMainWindow 代替 outPlugin（让主窗口隐藏，不销毁进程）
       utools.hideMainWindow();
     });
 
-    // 插件退出时清理
+    // 插件退出时清理所有窗口
     utools.onPluginOut((isKill) => {
       console.log('[DesktopWidget] 插件退出, isKill:', isKill);
-      if (isKill && widgetWindow && !widgetWindow.isDestroyed()) {
-        widgetWindow.close();
-        widgetWindow = null;
+      if (isKill) {
+        for (const k of Object.keys(widgetWindows)) {
+          try {
+            if (widgetWindows[k] && !widgetWindows[k].isDestroyed()) {
+              widgetWindows[k].close();
+            }
+          } catch(e) {}
+          delete widgetWindows[k];
+        }
       }
     });
   </script>

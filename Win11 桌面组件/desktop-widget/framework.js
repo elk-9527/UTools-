@@ -1,6 +1,7 @@
 /**
  * 桌面组件 - 框架层
  * 模块注册表 + 布局引擎 + 拖拽缩放 + 持久化
+ * 优化：rAF 节流 + 拖拽时禁用 transition + 缓存位置
  */
 
 const WidgetFramework = {
@@ -27,6 +28,10 @@ const WidgetFramework = {
 
   // === 吸附阈值（px） ===
   _snapThreshold: 12,
+
+  // === rAF 节流 ===
+  _rafPending: false,
+  _latestMoveEvent: null,
 
   // === 右键菜单关闭处理器 ===
   _ctxCloseHandler: null,
@@ -70,10 +75,10 @@ const WidgetFramework = {
         const card = inst.card;
         if (!card) continue;
         layout.modules[inst.module.id] = {
-          x: parseInt(card.style.left) || 0,
-          y: parseInt(card.style.top) || 0,
-          w: parseInt(card.style.width) || inst.module.defaultSize.w,
-          h: parseInt(card.style.height) || inst.module.defaultSize.h
+          x: inst._x != null ? inst._x : (parseInt(card.style.left) || 0),
+          y: inst._y != null ? inst._y : (parseInt(card.style.top) || 0),
+          w: inst._w != null ? inst._w : (parseInt(card.style.width) || inst.module.defaultSize.w),
+          h: inst._h != null ? inst._h : (parseInt(card.style.height) || inst.module.defaultSize.h)
         };
       }
       utools.db.put(layout);
@@ -116,6 +121,23 @@ const WidgetFramework = {
       w: defaultSize.w,
       h: defaultSize.h
     };
+  },
+
+  /**
+   * 刷新所有其他卡片的矩形缓存（用于 _snap 快速查找）
+   */
+  _refreshSnapCache(exceptCard) {
+    this._snapCache = [];
+    for (const inst of this._instances) {
+      const c = inst.card;
+      if (!c || c === exceptCard) continue;
+      this._snapCache.push({
+        x: parseInt(c.style.left) || 0,
+        y: parseInt(c.style.top) || 0,
+        w: parseInt(c.style.width) || 280,
+        h: parseInt(c.style.height) || 240
+      });
+    }
   },
 
   /* ==================== DOM 构建 ==================== */
@@ -166,8 +188,17 @@ const WidgetFramework = {
   _bindCardEvents(card, header, resizeHandle, module) {
     // --- 拖拽移动 ---
     header.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.widget-btn')) return; // 不拦截按钮点击
+      if (e.target.closest('.widget-btn')) return;
       if (e.button !== 0) return;
+
+      // 构建吸附缓存
+      this._refreshSnapCache(card);
+
+      const inst = this._instances.find(i => i.card === card);
+      if (inst) {
+        inst._x = parseInt(card.style.left) || 0;
+        inst._y = parseInt(card.style.top) || 0;
+      }
 
       this._dragState = {
         card,
@@ -176,12 +207,21 @@ const WidgetFramework = {
         origLeft: parseInt(card.style.left) || 0,
         origTop: parseInt(card.style.top) || 0
       };
+
+      // 拖拽期间禁用 transition 减少重排开销
+      card.classList.add('dragging');
+
       e.preventDefault();
     });
 
     // --- 缩放 ---
     resizeHandle.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
+      const inst = this._instances.find(i => i.card === card);
+      if (inst) {
+        inst._w = parseInt(card.style.width) || module.defaultSize.w;
+        inst._h = parseInt(card.style.height) || module.defaultSize.h;
+      }
       this._resizeState = {
         card,
         startX: e.clientX,
@@ -190,6 +230,7 @@ const WidgetFramework = {
         origH: parseInt(card.style.height) || module.defaultSize.h,
         module
       };
+      card.classList.add('dragging');
       e.preventDefault();
       e.stopPropagation();
     });
@@ -201,22 +242,37 @@ const WidgetFramework = {
     });
   },
 
-  /* ==================== 全局鼠标事件 ==================== */
+  /* ==================== 全局鼠标事件（rAF 节流） ==================== */
 
   _onMouseMove(e) {
+    this._latestMoveEvent = e;
+    if (!this._rafPending) {
+      this._rafPending = true;
+      requestAnimationFrame(() => {
+        this._rafPending = false;
+        this._processMouseMove(this._latestMoveEvent);
+      });
+    }
+  },
+
+  _processMouseMove(e) {
     // 拖拽移动
     if (this._dragState) {
       const ds = this._dragState;
       let newLeft = ds.origLeft + (e.clientX - ds.startX);
       let newTop = ds.origTop + (e.clientY - ds.startY);
 
-      // 网格吸附
-      const snapped = this._snap(ds.card, newLeft, newTop);
+      // 快速吸附（使用缓存位置）
+      const snapped = this._snapFast(ds.card, newLeft, newTop);
       newLeft = snapped.x;
       newTop = snapped.y;
 
       ds.card.style.left = newLeft + 'px';
       ds.card.style.top = newTop + 'px';
+
+      // 同步缓存
+      const inst = this._instances.find(i => i.card === ds.card);
+      if (inst) { inst._x = newLeft; inst._y = newTop; }
     }
 
     // 缩放
@@ -226,30 +282,37 @@ const WidgetFramework = {
       let newW = rs.origW + (e.clientX - rs.startX);
       let newH = rs.origH + (e.clientY - rs.startY);
 
-      // 尺寸限制
       newW = Math.max(m.minSize.w, Math.min(m.maxSize.w, newW));
       newH = Math.max(m.minSize.h, Math.min(m.maxSize.h, newH));
 
       rs.card.style.width = newW + 'px';
       rs.card.style.height = newH + 'px';
+
+      const inst = this._instances.find(i => i.card === rs.card);
+      if (inst) { inst._w = newW; inst._h = newH; }
     }
   },
 
   _onMouseUp() {
     if (this._dragState) {
+      this._dragState.card.classList.remove('dragging');
       this._dragState = null;
       this.saveLayout();
     }
     if (this._resizeState) {
+      this._resizeState.card.classList.remove('dragging');
       this._resizeState = null;
       this.saveLayout();
     }
   },
 
   /**
-   * 网格吸附算法
+   * 网格吸附算法（使用缓存位置，避免每次 parseInt）
    */
-  _snap(card, x, y) {
+  _snapFast(card, x, y) {
+    const cache = this._snapCache;
+    if (!cache || cache.length === 0) return { x, y };
+
     let bestX = x;
     let bestY = y;
     let minDistX = this._snapThreshold + 1;
@@ -258,45 +321,30 @@ const WidgetFramework = {
     const cardH = parseInt(card.style.height) || 240;
     const threshold = this._snapThreshold;
 
-    for (const inst of this._instances) {
-      const other = inst.card;
-      if (!other || other === card) continue;
-
-      const otherX = parseInt(other.style.left) || 0;
-      const otherY = parseInt(other.style.top) || 0;
-      const otherW = parseInt(other.style.width) || 280;
-      const otherH = parseInt(other.style.height) || 240;
-
-      // 水平吸附候选
-      const hCandidates = [
-        { target: otherX, dist: Math.abs(x - otherX) },
-        { target: otherX + otherW - cardW, dist: Math.abs((x + cardW) - (otherX + otherW)) },
-        { target: otherX + otherW, dist: Math.abs(x - (otherX + otherW)) }
+    for (const other of cache) {
+      // 水平吸附
+      const targetsX = [
+        other.x,
+        other.x + other.w - cardW,
+        other.x + other.w
       ];
-
-      for (const c of hCandidates) {
-        if (c.dist < minDistX) {
-          minDistX = c.dist;
-          bestX = c.target;
-        }
+      for (const tx of targetsX) {
+        const d = Math.abs(x - tx);
+        if (d < minDistX) { minDistX = d; bestX = tx; }
       }
 
-      // 垂直吸附候选
-      const vCandidates = [
-        { target: otherY, dist: Math.abs(y - otherY) },
-        { target: otherY + otherH - cardH, dist: Math.abs((y + cardH) - (otherY + otherH)) },
-        { target: otherY + otherH, dist: Math.abs(y - (otherY + otherH)) }
+      // 垂直吸附
+      const targetsY = [
+        other.y,
+        other.y + other.h - cardH,
+        other.y + other.h
       ];
-
-      for (const c of vCandidates) {
-        if (c.dist < minDistY) {
-          minDistY = c.dist;
-          bestY = c.target;
-        }
+      for (const ty of targetsY) {
+        const d = Math.abs(y - ty);
+        if (d < minDistY) { minDistY = d; bestY = ty; }
       }
     }
 
-    // 只在阈值内吸附
     return {
       x: minDistX <= threshold ? bestX : x,
       y: minDistY <= threshold ? bestY : y
@@ -345,7 +393,6 @@ const WidgetFramework = {
       }
 
       this._hideContextMenu();
-      // 同步清理 document 监听
       document.removeEventListener('click', this._ctxCloseHandler);
       this._ctxCloseHandler = null;
     });
@@ -401,7 +448,7 @@ const WidgetFramework = {
 
     this._container.appendChild(card);
 
-    const inst = { module, card, header, content, resizeHandle };
+    const inst = { module, card, header, content, resizeHandle, _x: layout.x, _y: layout.y, _w: layout.w, _h: layout.h };
     this._instances.push(inst);
     this.saveLayout();
     console.log(`[Framework] 添加模块: ${module.name}`);
@@ -443,6 +490,10 @@ const WidgetFramework = {
         inst.card.style.top = saved.y + 'px';
         inst.card.style.width = saved.w + 'px';
         inst.card.style.height = saved.h + 'px';
+        inst._x = saved.x;
+        inst._y = saved.y;
+        inst._w = saved.w;
+        inst._h = saved.h;
       }
     }
   },

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Win11 桌面组件</title>
+  <title>桌面组件</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="modules/clock/clock.css">
   <link rel="stylesheet" href="modules/calendar/calendar.css">
@@ -11,66 +11,75 @@
   <link rel="stylesheet" href="modules/todo/todo.css">
   <link rel="stylesheet" href="modules/quick-launch/quick-launch.css">
   <style>
-    #window-drag-handle {
+    html, body {
+      width: 100%; height: 100%;
+      margin: 0; padding: 0;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-size: 14px;
+      color: var(--text-primary);
+      user-select: none; -webkit-user-select: none;
+      background: transparent;
+    }
+    /* 拖拽条 */
+    #drag-handle {
       position: absolute; top: 0; left: 0; right: 0; height: 28px;
       z-index: 5; -webkit-app-region: drag; cursor: move;
+      display: flex; align-items: center; padding: 0 8px;
+    }
+    #drag-handle .module-title {
+      font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+      letter-spacing: 0.5px; text-transform: uppercase;
+      margin-left: 6px;
+    }
+    #drag-handle .module-icon { font-size: 14px; line-height: 1; }
+    #drag-handle .actions {
+      margin-left: auto; display: flex; gap: 4px;
+      -webkit-app-region: no-drag;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    body:hover #drag-handle .actions { opacity: 1; }
+    .action-btn {
+      width: 20px; height: 20px; border-radius: 6px; border: none;
+      background: rgba(255,255,255,0.06); color: var(--text-secondary);
+      cursor: pointer; font-size: 11px;
       display: flex; align-items: center; justify-content: center;
     }
-    #window-drag-handle .drag-indicator {
-      width: 32px; height: 4px; border-radius: 2px;
-      background: rgba(255,255,255,0.15); transition: background 0.2s;
+    .action-btn:hover { background: rgba(255,100,100,0.25); color: #ff6b6b; }
+    /* 内容区 */
+    #module-content {
+      position: absolute; top: 28px; left: 0; right: 0; bottom: 0;
+      padding: 4px 8px 8px;
     }
-    #window-drag-handle:hover .drag-indicator {
-      background: rgba(255,255,255,0.3);
+    /* 缩放手柄 */
+    #resize-handle {
+      position: absolute; bottom: 0; right: 0;
+      width: 18px; height: 18px; cursor: nwse-resize; z-index: 10;
+      opacity: 0; transition: opacity 0.15s;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 40%, rgba(255,255,255,0.12) 55%, transparent 55%);
+      border-bottom-right-radius: 16px;
     }
-    #desktop-container {
-      position: absolute; top: 28px; left: 0; right: 0; bottom: 0; padding: 8px;
+    body:hover #resize-handle { opacity: 0.5; }
+    #resize-handle:hover { opacity: 1 !important; }
+    /* 加载提示 */
+    #loading {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      color: var(--text-tertiary); font-size: 13px;
     }
-    #settings-btn {
-      position: absolute; top: 4px; right: 8px;
-      width: 22px; height: 22px; border-radius: 6px; border: none;
-      background: transparent; color: var(--text-tertiary); cursor: pointer;
-      font-size: 13px; z-index: 6;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s; -webkit-app-region: no-drag;
-    }
-    #settings-btn:hover {
-      background: rgba(255,255,255,0.08); color: var(--text-primary);
-    }
-    /* 设置弹窗 */
-    .settings-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 2000;
-      display: flex; align-items: center; justify-content: center;
-      animation: fadeIn 0.15s ease;
-    }
-    .settings-dialog {
-      background: rgba(30, 30, 44, 0.96);
-      backdrop-filter: blur(40px) saturate(180%);
-      -webkit-backdrop-filter: blur(40px) saturate(180%);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 16px;
-      padding: 20px 24px;
-      min-width: 260px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-    .settings-dialog h3 { font-size: 15px; margin-bottom: 16px; color: var(--text-primary); }
-    .settings-group { margin-bottom: 12px; }
-    .settings-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
-    .settings-theme-btns { display: flex; gap: 6px; }
-    .settings-theme-btn {
-      flex: 1; padding: 8px 12px; border-radius: 8px;
-      border: 1px solid var(--border-card); background: transparent;
-      color: var(--text-secondary); cursor: pointer; font-size: 12px;
-      text-align: center; transition: all 0.15s;
-    }
-    .settings-theme-btn:hover { background: rgba(255,255,255,0.04); }
-    .settings-theme-btn.active { background: var(--accent); border-color: transparent; color: #fff; }
   </style>
 </head>
 <body>
-  <div id="window-drag-handle"><div class="drag-indicator"></div></div>
-  <button id="settings-btn" title="设置">⚙</button>
-  <div id="desktop-container"></div>
+  <div id="drag-handle">
+    <span class="module-icon" id="module-icon">📦</span>
+    <span class="module-title" id="module-title">加载中...</span>
+    <div class="actions">
+      <button class="action-btn" id="remove-btn" title="关闭模块">✕</button>
+    </div>
+  </div>
+  <div id="module-content"></div>
+  <div id="resize-handle"></div>
+  <div id="loading">正在加载...</div>
 
   <script src="modules/module-base.js"></script>
   <script src="modules/clock/clock.js"></script>
@@ -78,79 +87,115 @@
   <script src="modules/weather/weather.js"></script>
   <script src="modules/todo/todo.js"></script>
   <script src="modules/quick-launch/quick-launch.js"></script>
-  <script src="framework.js"></script>
   <script>
-    // 注册模块
-    WidgetFramework.register(new ClockModule());
-    WidgetFramework.register(new CalendarModule());
-    WidgetFramework.register(new WeatherModule());
-    WidgetFramework.register(new TodoModule());
-    WidgetFramework.register(new QuickLaunchModule());
+    (function() {
+      // 从 URL 参数读取模块 ID
+      const params = new URLSearchParams(window.location.search);
+      const moduleId = params.get('module');
 
-    // 启动
-    WidgetFramework.init('desktop-container');
+      const MODULE_MAP = {
+        clock:        { cls: ClockModule,       icon: '🕐', name: '时钟' },
+        calendar:     { cls: CalendarModule,    icon: '📅', name: '日历' },
+        weather:      { cls: WeatherModule,     icon: '🌤️', name: '天气' },
+        todo:         { cls: TodoModule,        icon: '✅', name: '待办' },
+        'quick-launch': { cls: QuickLaunchModule, icon: '🚀', name: '快捷启动' }
+      };
 
-    // --- 主题初始化 ---
-    const st = utools.db.get('widget-settings') || {};
-    const theme = st.theme || 'auto'; // 'auto' | 'light' | 'dark'
-    if (theme === 'auto') {
-      delete document.documentElement.dataset.theme;
-    } else {
-      document.documentElement.dataset.theme = theme;
-    }
+      if (!MODULE_MAP[moduleId]) {
+        document.getElementById('loading').textContent = '❌ 未知模块: ' + moduleId;
+        return;
+      }
 
-    // --- 设置按钮 ---
-    document.getElementById('settings-btn').addEventListener('click', function(e) {
-      // 打开真正的设置面板
-      const old = document.querySelector('.settings-overlay');
-      if (old) { old.remove(); return; }
+      const info = MODULE_MAP[moduleId];
+      document.getElementById('module-icon').textContent = info.icon;
+      document.getElementById('module-title').textContent = info.name;
+      document.getElementById('loading').style.display = 'none';
 
-      const curTheme = document.documentElement.dataset.theme || 'auto';
+      // 创建并渲染模块
+      const module = new info.cls();
+      const container = document.getElementById('module-content');
+      module.render(container);
 
-      const overlay = document.createElement('div');
-      overlay.className = 'settings-overlay';
-      overlay.innerHTML = `
-        <div class="settings-dialog">
-          <h3>⚙ 设置</h3>
-          <div class="settings-group">
-            <div class="settings-label">主题</div>
-            <div class="settings-theme-btns">
-              <button class="settings-theme-btn ${curTheme === 'auto' ? 'active' : ''}" data-theme="auto">跟随系统 🌓</button>
-              <button class="settings-theme-btn ${curTheme === 'dark' ? 'active' : ''}" data-theme="dark">深色 🌙</button>
-              <button class="settings-theme-btn ${curTheme === 'light' ? 'active' : ''}" data-theme="light">浅色 ☀️</button>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-
-      // 主题切换
-      overlay.querySelectorAll('.settings-theme-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const val = btn.dataset.theme;
-          if (val === 'auto') {
-            delete document.documentElement.dataset.theme;
-          } else {
-            document.documentElement.dataset.theme = val;
-          }
-          // 持久化
-          const existing = utools.db.get('widget-settings');
-          const doc = { _id: 'widget-settings', theme: val };
+      // --- 窗口级拖拽（由 -webkit-app-region: drag 处理，JS 监听移动后保存位置） ---
+      let saveTimer = null;
+      function saveWindowLayout() {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          const layout = utools.db.get('widget-layout') || { _id: 'widget-layout', modules: {} };
+          if (!layout.modules) layout.modules = {};
+          layout.modules[moduleId] = {
+            x: window.screenX,
+            y: window.screenY,
+            w: window.outerWidth,
+            h: window.outerHeight
+          };
+          const doc = { _id: 'widget-layout', modules: layout.modules };
+          const existing = utools.db.get('widget-layout');
           if (existing && existing._rev) doc._rev = existing._rev;
           utools.db.put(doc);
-          // 更新按钮状态
-          overlay.querySelectorAll('.settings-theme-btn').forEach(b => b.classList.remove('active'));
-          overlay.querySelector(`[data-theme="${val}"]`).classList.add('active');
-        });
+        }, 500);
+      }
+
+      // 监听窗口移动（通过轮询或 resize/move 事件）
+      // uTools 的 BrowserWindow 没有直接的 move/resize 事件，用轮询检测
+      let lastX = window.screenX, lastY = window.screenY,
+          lastW = window.outerWidth, lastH = window.outerHeight;
+      setInterval(() => {
+        if (window.screenX !== lastX || window.screenY !== lastY ||
+            window.outerWidth !== lastW || window.outerHeight !== lastH) {
+          lastX = window.screenX; lastY = window.screenY;
+          lastW = window.outerWidth; lastH = window.outerHeight;
+          saveWindowLayout();
+        }
+      }, 800);
+
+      // --- 缩放手柄 ---
+      const resizeHandle = document.getElementById('resize-handle');
+      let resizeState = null;
+
+      resizeHandle.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        resizeState = {
+          startX: e.screenX,
+          startY: e.screenY,
+          origW: window.outerWidth,
+          origH: window.outerHeight
+        };
+        e.preventDefault();
+        e.stopPropagation();
       });
 
-      // 点击遮罩关闭
-      overlay.addEventListener('click', (ev) => {
-        if (ev.target === overlay) overlay.remove();
+      document.addEventListener('mousemove', (e) => {
+        if (!resizeState) return;
+        const newW = Math.max(160, Math.min(600, resizeState.origW + (e.screenX - resizeState.startX)));
+        const newH = Math.max(100, Math.min(600, resizeState.origH + (e.screenY - resizeState.startY)));
+        try { window.resizeTo(newW, newH); } catch(ex) {}
       });
-    });
 
-    console.log('[DesktopWidget] 桌面组件已启动');
+      document.addEventListener('mouseup', () => {
+        if (resizeState) {
+          resizeState = null;
+          saveWindowLayout();
+        }
+      });
+
+      // --- 关闭按钮 ---
+      document.getElementById('remove-btn').addEventListener('click', () => {
+        module.destroy();
+        try { window.close(); } catch(e) {}
+      });
+
+      // --- 主题适配 ---
+      const st = utools.db.get('widget-settings') || {};
+      const theme = st.theme || 'auto';
+      if (theme === 'auto') {
+        delete document.documentElement.dataset.theme;
+      } else {
+        document.documentElement.dataset.theme = theme;
+      }
+
+      console.log(`[DesktopWidget] ${info.name} 模块已启动`);
+    })();
   </script>
 </body>
 </html>
