@@ -20,8 +20,31 @@
 
     const widgetWindows = {};
 
+    // 读取全局层级设置
+    function getGlobalZOrder() {
+      const settings = utools.db.get('widget-settings') || {};
+      return settings.zOrder || 'top';
+    }
+
+    // 应用层级到指定窗口
+    function applyZOrder(win, level) {
+      if (!win || win.isDestroyed()) return;
+      if (level === 'top') {
+        win.setAlwaysOnTop(true, 'screen-saver');
+        console.log('[DesktopWidget] 窗口设置为顶层');
+      } else if (level === 'normal') {
+        win.setAlwaysOnTop(false);
+        console.log('[DesktopWidget] 窗口设置为正常层级');
+      } else if (level === 'bottom') {
+        // Electron: 先取消置顶，再最小化后恢复来达到"贴底"效果
+        win.setAlwaysOnTop(false);
+        win.minimize();
+        setTimeout(() => { if (win && !win.isDestroyed()) win.restore(); }, 100);
+        console.log('[DesktopWidget] 窗口设置为底层');
+      }
+    }
+
     function createWidgetWindow(modConfig) {
-      // 读取已保存的布局
       const layout = utools.db.get('widget-layout');
       const saved = layout?.modules?.[modConfig.id];
       const display = utools.getPrimaryDisplay();
@@ -43,9 +66,9 @@
           maxWidth: 600, maxHeight: 600,
           frame: false,
           transparent: true,
-          alwaysOnTop: true,
+          alwaysOnTop: true,  // 先置顶，回调中再应用实际层级
           skipTaskbar: true,
-          resizable: false,  // 由模块内部 JS 控制缩放
+          resizable: false,
           hasShadow: false,
           thickFrame: false,
           webPreferences: {
@@ -55,63 +78,56 @@
         () => {
           if (win && !win.isDestroyed()) {
             win.show();
-            // 应用已保存的层级设置
-            const settings = utools.db.get('widget-settings') || {};
-            const zOrder = settings.zOrder || 'top';
-            if (zOrder === 'top') {
-              win.setAlwaysOnTop(true, 'screen-saver');
-            } else if (zOrder === 'normal') {
-              win.setAlwaysOnTop(false);
-            } else if (zOrder === 'bottom') {
-              win.setAlwaysOnTop(true, 'normal');
-              // 移到最后：minimize 再 restore 来达到"置底"效果
-              // 实际通过 setAlwaysOnTop(false) + 手动管理
-              win.setAlwaysOnTop(false);
-            }
+            const zOrder = getGlobalZOrder();
+            applyZOrder(win, zOrder);
             win.focus();
-            console.log(`[DesktopWidget] ${modConfig.name} 窗口已显示, zOrder=${zOrder}`);
+            console.log(`[DesktopWidget] ${modConfig.name} 显示完成, zOrder=${zOrder}`);
           }
         }
       );
-
-      // 监听子窗口层级变更请求
-      try {
-        const { ipcRenderer } = require('electron');
-        ipcRenderer.on('zorder-change', (event, data) => {
-          const w = widgetWindows[modConfig.id];
-          if (!w || w.isDestroyed()) return;
-          if (data.zOrder === 'top') {
-            w.setAlwaysOnTop(true, 'screen-saver');
-          } else if (data.zOrder === 'normal') {
-            w.setAlwaysOnTop(false);
-          } else if (data.zOrder === 'bottom') {
-            w.setAlwaysOnTop(false);
-          }
-          // 持久化
-          const ex = utools.db.get('widget-settings') || {};
-          const doc = { _id: 'widget-settings', theme: ex.theme || 'auto', zOrder: data.zOrder };
-          if (ex && ex._rev) doc._rev = ex._rev;
-          utools.db.put(doc);
-        });
-      } catch(e) {
-        console.warn('[DesktopWidget] ipcRenderer 监听失败 (正常，widget 在独立窗口)', e);
-      }
 
       widgetWindows[modConfig.id] = win;
       return win;
     }
 
+    // ======== 监听子窗口发送的层级变更消息 ========
+    try {
+      const { ipcRenderer } = require('electron');
+      ipcRenderer.on('zorder-change', (event, data) => {
+        console.log('[DesktopWidget] 收到层级变更请求:', data);
+        if (!data || !data.zOrder) return;
+        const zOrder = data.zOrder;
+
+        // 应用到所有窗口
+        for (const k of Object.keys(widgetWindows)) {
+          const w = widgetWindows[k];
+          if (w && !w.isDestroyed()) {
+            applyZOrder(w, zOrder);
+          }
+        }
+
+        // 持久化
+        const ex = utools.db.get('widget-settings') || {};
+        const doc = { _id: 'widget-settings', theme: ex.theme || 'auto', zOrder: zOrder };
+        if (ex && ex._rev) doc._rev = ex._rev;
+        utools.db.put(doc);
+      });
+      console.log('[DesktopWidget] ipcRenderer zorder-change 监听已注册');
+    } catch(e) {
+      console.warn('[DesktopWidget] ipcRenderer 不可用:', e.message);
+    }
+
+    // ======== 插件生命周期 ========
     utools.onPluginEnter(({ code }) => {
       if (code !== 'desktop-widget') return;
 
-      // 检查是否已有窗口存活
+      // 已有存活窗口：显示并聚焦
       const existingKeys = Object.keys(widgetWindows).filter(k => {
         const w = widgetWindows[k];
         return w && !w.isDestroyed();
       });
 
       if (existingKeys.length > 0) {
-        // 已有窗口：全部显示并聚焦
         for (const k of existingKeys) {
           try { widgetWindows[k].show(); widgetWindows[k].focus(); } catch(e) {}
         }
@@ -119,7 +135,7 @@
         return;
       }
 
-      // 首次启动：为每个模块创建独立窗口
+      // 首次启动
       try {
         for (const cfg of MODULE_CONFIGS) {
           createWidgetWindow(cfg);
@@ -132,7 +148,6 @@
       utools.hideMainWindow();
     });
 
-    // 插件退出时清理所有窗口
     utools.onPluginOut((isKill) => {
       console.log('[DesktopWidget] 插件退出, isKill:', isKill);
       if (isKill) {
