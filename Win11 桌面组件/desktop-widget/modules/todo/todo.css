@@ -1,5 +1,5 @@
 /* ============================================
-   待办事项模块 — 液态玻璃风格
+   待办事项模块
    ============================================ */
 
 .todo-container {
@@ -7,8 +7,6 @@
   flex-direction: column;
   height: 100%;
   gap: 8px;
-  position: relative;
-  z-index: 1;
 }
 
 .todo-input-row {
@@ -18,7 +16,6 @@
 
 .todo-input-row .input {
   flex: 1;
-  border-radius: 10px;
 }
 
 .todo-list {
@@ -26,40 +23,37 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-height: 0;
-  padding-right: 2px;
 }
 
 .todo-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  transition: all 0.15s;
-  animation: todoIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid transparent;
+  padding: 7px 8px;
+  border-radius: 8px;
+  transition: background 0.12s;
+  animation: todoIn 0.2s ease;
 }
 
 @keyframes todoIn {
-  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .todo-item:hover {
   background: rgba(255, 255, 255, 0.04);
-  border-color: var(--border-subtle);
 }
 
 .todo-checkbox {
-  width: clamp(17px, 3vw, 20px);
-  height: clamp(17px, 3vw, 20px);
+  width: clamp(16px, 3vw, 20px);
+  height: clamp(16px, 3vw, 20px);
   border-radius: 50%;
   border: 2px solid var(--border-card);
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,16 +62,13 @@
 }
 
 .todo-checkbox:hover {
-  border-color: var(--accent-solid);
-  box-shadow: 0 0 10px var(--accent-glow);
-  transform: scale(1.1);
+  border-color: var(--accent);
 }
 
 .todo-item.done .todo-checkbox {
-  background: linear-gradient(135deg, var(--accent), rgba(96, 165, 250, 0.6));
-  border-color: transparent;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
-  box-shadow: 0 2px 8px var(--accent-glow);
 }
 
 .todo-text {
@@ -85,14 +76,12 @@
   font-size: clamp(13px, 2vw, 15px);
   color: var(--text-primary);
   word-break: break-all;
-  line-height: 1.4;
-  transition: all 0.2s;
 }
 
 .todo-item.done .todo-text {
   text-decoration: line-through;
   color: var(--text-tertiary);
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 .todo-delete {
@@ -105,7 +94,7 @@
   cursor: pointer;
   font-size: clamp(11px, 1.8vw, 13px);
   opacity: 0;
-  transition: all 0.15s;
+  transition: all 0.12s;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -113,14 +102,12 @@
 }
 
 .todo-item:hover .todo-delete {
-  opacity: 0.6;
+  opacity: 1;
 }
 
 .todo-delete:hover {
-  opacity: 1 !important;
-  background: rgba(255, 80, 80, 0.15);
-  color: #ff6b6b;
-  transform: scale(1.1);
+  background: rgba(255, 80, 80, 0.2);
+  color: #ff5555;
 }
 
 .todo-empty {
@@ -130,41 +117,28 @@
   height: 100%;
   color: var(--text-tertiary);
   font-size: clamp(12px, 2vw, 14px);
-  opacity: 0.5;
-  font-style: italic;
+  opacity: 0.6;
 }
 
 .todo-date-badge {
   font-size: clamp(9px, 1.5vw, 11px);
-  color: var(--accent-solid);
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--accent-soft);
-  font-weight: 500;
+  color: var(--text-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
   flex-shrink: 0;
 }
 
 .todo-filter-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 10px;
-  margin-bottom: 4px;
-  font-size: clamp(11px, 1.8vw, 13px);
-  color: var(--text-secondary);
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-glow);
-  border-radius: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 5px 8px; margin-bottom: 4px;
+  font-size: clamp(11px, 1.8vw, 13px); color: var(--text-secondary);
+  background: var(--accent-glow); border-radius: 8px;
 }
 
 .todo-filter-clear {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: var(--accent-solid);
-  font-size: clamp(11px, 1.8vw, 13px);
-  font-weight: 500;
+  border: none; background: transparent; cursor: pointer;
+  color: var(--accent); font-size: clamp(11px, 1.8vw, 13px);
 }
 
 .todo-filter-clear:hover { text-decoration: underline; }
