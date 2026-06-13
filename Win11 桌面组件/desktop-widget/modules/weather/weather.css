@@ -138,7 +138,7 @@
 
 /* 离线提示条 */
 .weather-offline-bar {
-  font-size: 10px; color: var(--text-tertiary);
+  font-size: clamp(10px, 1.6vw, 12px); color: var(--text-tertiary);
   text-align: center; padding: 3px 6px; margin-bottom: 6px;
   border-radius: 6px; background: rgba(255, 200, 60, 0.10);
 }
@@ -183,7 +183,7 @@
 }
 
 .weather-settings-dialog h3 {
-  font-size: 15px;
+  font-size: clamp(14px, 2.5vw, 16px);
   margin-bottom: 12px;
   color: var(--text-primary);
 }
@@ -198,7 +198,7 @@
 }
 
 .weather-settings-dialog .hint {
-  font-size: 11px;
+  font-size: clamp(10px, 1.8vw, 12px);
   color: var(--text-tertiary);
   margin-top: 8px;
 }
