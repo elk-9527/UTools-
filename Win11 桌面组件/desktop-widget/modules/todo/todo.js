@@ -84,6 +84,10 @@ class TodoModule extends WidgetModule {
     this._todos.unshift(doc);
     this._renderList();
     // 跨窗口通知：写入 db 桥接
+    this._notifyBridge();
+  }
+
+  _notifyBridge() {
     const existing = utools.db.get('todo-bridge');
     const bridge = { _id: 'todo-bridge', _ts: Date.now() };
     if (existing && existing._rev) bridge._rev = existing._rev;
@@ -101,11 +105,7 @@ class TodoModule extends WidgetModule {
       return (b.createdAt || 0) - (a.createdAt || 0);
     });
     this._renderList();
-    // 跨窗口通知
-    const existing = utools.db.get('todo-bridge');
-    const bridge = { _id: 'todo-bridge', _ts: Date.now() };
-    if (existing && existing._rev) bridge._rev = existing._rev;
-    utools.db.put(bridge);
+    this._notifyBridge();
   }
 
   _deleteTodo(id) {
@@ -114,11 +114,7 @@ class TodoModule extends WidgetModule {
     if (doc) utools.db.remove(doc);
     else utools.db.remove(id);
     this._renderList();
-    // 跨窗口通知
-    const existing = utools.db.get('todo-bridge');
-    const bridge = { _id: 'todo-bridge', _ts: Date.now() };
-    if (existing && existing._rev) bridge._rev = existing._rev;
-    utools.db.put(bridge);
+    this._notifyBridge();
   }
 
   _renderList() {
