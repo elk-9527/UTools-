@@ -14,6 +14,7 @@ class TodoModule extends WidgetModule {
     });
     this._todos = [];
     this._filterDate = null; // 筛选日期
+    this._lastBridgeTs = 0;
   }
 
   render(container) {

@@ -112,6 +112,15 @@ body {
 /* 白底透明遮罩 */
 body[data-tint="white"] {
   --tint-opacity: 0.38;
+  /* 浅色遮罩下的文字必须变深色，否则白底白字完全看不见 */
+  --text-primary: rgba(0, 0, 0, 0.90);
+  --text-secondary: rgba(0, 0, 0, 0.62);
+  --text-tertiary: rgba(0, 0, 0, 0.44);
+  --border-card: rgba(0, 0, 0, 0.10);
+  --border-card-hover: rgba(0, 0, 0, 0.18);
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --accent: rgba(40, 100, 220, 0.78);
+  --accent-glow: rgba(40, 100, 220, 0.22);
   background: rgba(255, 255, 255, var(--tint-opacity));
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);

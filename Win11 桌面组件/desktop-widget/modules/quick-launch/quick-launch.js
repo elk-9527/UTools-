@@ -167,16 +167,16 @@ class QuickLaunchModule extends WidgetModule {
       });
     });
 
-    // 浏览
-    browseBtn.addEventListener('click', () => {
+    // 浏览（showOpenDialog 返回 Promise，必须异步处理）
+    browseBtn.addEventListener('click', async () => {
       if (targetType === 'app') {
-        const picked = utools.showOpenDialog({
+        const picked = await utools.showOpenDialog({
           filters: [{ name: '可执行文件', extensions: ['exe', 'lnk'] }],
           properties: ['openFile']
         });
         if (picked && picked[0]) { targetPath = picked[0]; refreshInputs(); }
       } else if (targetType === 'folder') {
-        const picked = utools.showOpenDialog({
+        const picked = await utools.showOpenDialog({
           properties: ['openDirectory']
         });
         if (picked && picked[0]) { targetPath = picked[0]; refreshInputs(); }

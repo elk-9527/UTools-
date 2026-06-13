@@ -14,6 +14,7 @@ class CalendarModule extends WidgetModule {
     });
     this._currentYear = new Date().getFullYear();
     this._currentMonth = new Date().getMonth(); // 0-11
+    this._lastTodoBridgeTs = 0;
   }
 
   render(container) {

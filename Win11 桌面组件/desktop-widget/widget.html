@@ -144,7 +144,12 @@
       }
 
       function applyOpacity(val) {
-        document.body.style.setProperty('--tint-opacity', String(val));
+        // 防御：undefined / NaN / 非数字直接移除 inline 覆盖，回退 CSS 默认值
+        if (val == null || isNaN(Number(val))) {
+          document.body.style.removeProperty('--tint-opacity');
+        } else {
+          document.body.style.setProperty('--tint-opacity', String(Number(val)));
+        }
       }
 
       function updateWidgetSettings(patch) {
@@ -154,7 +159,7 @@
           theme: ex.theme || 'auto',
           tint: ex.tint || 'black',
           tintOpacity: ex.tintOpacity != null ? ex.tintOpacity : undefined,
-          zOrder: ex.zOrder || 'top',
+          zOrder: ex.zOrder || 'bottom',
           ...patch
         };
         if (ex && ex._rev) doc._rev = ex._rev;
@@ -349,7 +354,7 @@
       const ZORDER_ICONS = { top: '🔝', normal: '📋', bottom: '⬇️' };
       function applyZOrderIcon() {
         const settings = utools.db.get('widget-settings') || {};
-        zorderBtn.textContent = ZORDER_ICONS[settings.zOrder || 'top'] || '🔝';
+        zorderBtn.textContent = ZORDER_ICONS[settings.zOrder || 'bottom'] || '🔝';
       }
       applyZOrderIcon();
 
@@ -359,7 +364,7 @@
         if (oldMenu) { oldMenu.remove(); return; }
 
         const settings = utools.db.get('widget-settings') || {};
-        const curZ = settings.zOrder || 'top';
+        const curZ = settings.zOrder || 'bottom';
 
         const menu = document.createElement('div');
         menu.className = 'context-menu zorder-menu';

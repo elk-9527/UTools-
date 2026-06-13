@@ -71,7 +71,7 @@
           transparent: true,
           alwaysOnTop: false,  // 默认底层，不遮挡其他窗口
           skipTaskbar: true,
-          resizable: false,
+          resizable: true,   // 允许 JS window.resizeTo() 调整大小（frame:false 无可见边框）
           minimizable: false,
           hasShadow: false,
           thickFrame: false,
@@ -82,6 +82,7 @@
         },
         () => {
           if (win && !win.isDestroyed()) {
+            win.setMinimizable(false);   // 阻止 Win+D 最小化窗口
             win.showInactive();            // 不抢焦点
             win.setFocusable(false);       // 不让窗口获得焦点，防止被"显示桌面"视为可隐藏窗口
             const zOrder = getGlobalZOrder();
@@ -123,25 +124,27 @@
     }
 
     // ======== 桌面钉住：轮询恢复被"显示桌面"隐藏的窗口 ========
+    // 使用 show()（比 showInactive 更强制），配合 setFocusable(false) 不抢焦点
     setInterval(() => {
       for (const k of Object.keys(widgetWindows)) {
         const w = widgetWindows[k];
-        if (!w || w.isDestroyed()) continue;
+        if (!w || w.isDestroyed()) { delete widgetWindows[k]; continue; }
         try {
           if (w.isMinimized()) w.restore();
-          if (!w.isVisible()) w.showInactive();
+          if (!w.isVisible()) w.show();  // 强制显示，setFocusable(false) 防止抢焦点
           // 层级修正
           const z = getGlobalZOrder();
           if (z === 'bottom') {
             if (w.isAlwaysOnTop()) w.setAlwaysOnTop(false);
             try { w.moveBottom(); } catch(e) {}
-            if (w.isFocused()) { try { w.blur(); } catch(e) {} }
           } else if (z === 'top') {
             if (!w.isAlwaysOnTop()) w.setAlwaysOnTop(true, 'screen-saver');
+          } else if (z === 'normal') {
+            if (w.isAlwaysOnTop()) w.setAlwaysOnTop(false);
           }
         } catch(e) {}
       }
-    }, 150);
+    }, 200);
 
     // ======== 插件生命周期 ========
     utools.onPluginEnter(({ code }) => {
@@ -161,10 +164,13 @@
         }
         for (const k of Object.keys(widgetWindows)) {
           try {
+            const win = widgetWindows[k];
+            if (!win || win.isDestroyed()) { delete widgetWindows[k]; continue; }
             const zOrder = getGlobalZOrder();
-            widgetWindows[k].showInactive();
-            if (zOrder === 'bottom') widgetWindows[k].setFocusable(false);
-            applyZOrder(widgetWindows[k], zOrder);
+            win.showInactive();
+            if (zOrder === 'bottom') win.setFocusable(false);
+            else win.setFocusable(true);
+            applyZOrder(win, zOrder);
           } catch(e) {}
         }
         utools.hideMainWindow();
