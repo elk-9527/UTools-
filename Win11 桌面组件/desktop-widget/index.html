@@ -36,10 +36,8 @@
         win.setAlwaysOnTop(false);
         console.log('[DesktopWidget] 窗口设置为正常层级');
       } else if (level === 'bottom') {
-        // Electron: 先取消置顶，再最小化后恢复来达到"贴底"效果
+        // 取消置顶即可让窗口沉底（桌面级 type='desktop' 下仍然钉在桌面）
         win.setAlwaysOnTop(false);
-        win.minimize();
-        setTimeout(() => { if (win && !win.isDestroyed()) win.restore(); }, 100);
         console.log('[DesktopWidget] 窗口设置为底层');
       }
     }
@@ -72,7 +70,8 @@
           maxWidth: 600, maxHeight: 600,
           frame: false,
           transparent: true,
-          alwaysOnTop: true,  // 先置顶，回调中再应用实际层级
+          type: 'desktop',     // 钉在桌面，不随 Win+D 消失
+          alwaysOnTop: false,
           skipTaskbar: true,
           resizable: false,
           hasShadow: false,
@@ -89,14 +88,6 @@
             applyZOrder(win, zOrder);
             win.focus();
             console.log(`[DesktopWidget] ${modConfig.name} 显示完成, zOrder=${zOrder}`);
-
-            // 桌面钉住：监听 hide/minimize 立即恢复，防止"显示桌面"让窗口消失
-            win.on('hide', () => {
-              try { if (win && !win.isDestroyed()) win.show(); } catch(e) {}
-            });
-            win.on('minimize', () => {
-              try { if (win && !win.isDestroyed()) win.restore(); } catch(e) {}
-            });
           }
         }
       );
