@@ -94,11 +94,11 @@
 .calendar-day.has-todo::before {
   content: '';
   position: absolute;
-  bottom: 2px;
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--accent);
 }
