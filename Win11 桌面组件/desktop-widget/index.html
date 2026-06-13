@@ -71,7 +71,7 @@
           frame: false,
           transparent: true,
           type: 'desktop',     // 钉在桌面，不随 Win+D 消失
-          alwaysOnTop: false,
+          alwaysOnTop: true,
           skipTaskbar: true,
           resizable: false,
           hasShadow: false,
@@ -122,6 +122,19 @@
     } catch(e) {
       console.warn('[DesktopWidget] ipcRenderer 不可用:', e.message);
     }
+
+    // ======== 桌面钉住：轮询恢复被"显示桌面"隐藏的窗口 ========
+    setInterval(() => {
+      for (const k of Object.keys(widgetWindows)) {
+        const w = widgetWindows[k];
+        if (!w || w.isDestroyed()) continue;
+        try {
+          // Win+D / "显示桌面" 会最小化所有窗口，检测到后立即恢复
+          if (w.isMinimized()) { w.restore(); w.show(); }
+          else if (!w.isVisible()) { w.show(); }
+        } catch(e) {}
+      }
+    }, 200);
 
     // ======== 插件生命周期 ========
     utools.onPluginEnter(({ code }) => {
