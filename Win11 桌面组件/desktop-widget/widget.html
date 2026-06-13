@@ -23,6 +23,7 @@
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
       font-size: 14px;
+      font-weight: 500;
       color: var(--text-primary);
       user-select: none; -webkit-user-select: none;
       box-sizing: border-box;
@@ -283,20 +284,22 @@
         document.body.appendChild(overlay);
 
         overlay.querySelectorAll('.theme-option[data-theme]').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
             const val = btn.dataset.theme;
             updateWidgetSettings({ theme: val });
             applyTheme(val);
-            overlay.querySelectorAll('.theme-option[data-theme]').forEach(b => b.classList.toggle('active', b === btn));
+            overlay.remove();
           });
         });
 
         overlay.querySelectorAll('.theme-option[data-tint]').forEach(btn => {
-          btn.addEventListener('click', () => {
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
             const val = btn.dataset.tint;
             updateWidgetSettings({ tint: val });
             applyTint(val);
-            overlay.querySelectorAll('.theme-option[data-tint]').forEach(b => b.classList.toggle('active', b === btn));
+            overlay.remove();
           });
         });
 
