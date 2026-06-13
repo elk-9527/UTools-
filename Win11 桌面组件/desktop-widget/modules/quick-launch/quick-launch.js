@@ -109,7 +109,8 @@ class QuickLaunchModule extends WidgetModule {
     overlay.className = 'ql-dialog-overlay';
 
     const updateUI = () => {
-      overlay.querySelectorAll('.ql-type-tab').forEach(t => {
+      const tabs = overlay.querySelectorAll('.ql-type-tab');
+      if (tabs.length > 0) tabs.forEach(t => {
         t.classList.toggle('active', t.dataset.type === targetType);
       });
 
@@ -117,18 +118,24 @@ class QuickLaunchModule extends WidgetModule {
       const urlInput = overlay.querySelector('#ql-target-input');
       const nameInput = overlay.querySelector('#ql-name-input');
 
+      if (!browseBtn || !urlInput) return;
+
       if (targetType === 'url') {
+        // 网址模式：不用系统浏览按钮，输入框可手填
         browseBtn.style.display = 'none';
         urlInput.style.display = '';
+        urlInput.readOnly = false;
         urlInput.placeholder = '输入网址，如 https://www.baidu.com';
-      } else {
+        urlInput.value = '';
+      } else if (targetType === 'app' || targetType === 'folder') {
         browseBtn.style.display = '';
-        urlInput.style.display = 'none';
-        urlInput.placeholder = '';
+        urlInput.placeholder = '点击浏览选择文件...';
+        urlInput.readOnly = true;
         if (targetPath) {
           urlInput.style.display = '';
           urlInput.value = targetPath;
-          urlInput.readOnly = true;
+        } else {
+          urlInput.style.display = 'none';
         }
       }
     };
@@ -155,7 +162,7 @@ class QuickLaunchModule extends WidgetModule {
 
     document.body.appendChild(overlay);
 
-    // 类型切换
+    // 类型切换（必须在 appendChild 之后绑定）
     overlay.querySelectorAll('.ql-type-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         targetType = tab.dataset.type;
