@@ -72,6 +72,7 @@ class QuickLaunchModule extends WidgetModule {
 
       item.addEventListener('contextmenu', (e) => {
         e.preventDefault();
+        e.stopPropagation();  // 阻止冒泡到全局，防止设置面板覆盖删除菜单
         this._showItemMenu(e, item.dataset.id);
       });
     });

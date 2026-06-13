@@ -248,8 +248,11 @@
       });
 
       // --- 右键设置面板：主题切换 ---
+      // 仅在模块未消费右键时显示（快捷启动等模块自己处理右键菜单）
       document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
+        // 如果事件来自模块内容区，由模块自己处理，不弹设置面板
+        if (e.target.closest('#module-content')) return;
         showSettingsPanel();
       });
 
