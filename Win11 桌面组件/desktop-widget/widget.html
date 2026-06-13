@@ -60,13 +60,19 @@
       position: absolute; top: 28px; left: 0; right: 0; bottom: 0;
       padding: 4px 8px 8px;
     }
-    /* 缩放手柄 */
+    /* 缩放手柄 — 加大 hitbox */
     #resize-handle {
       position: absolute; bottom: 0; right: 0;
-      width: 18px; height: 18px; cursor: nwse-resize; z-index: 10;
+      width: 28px; height: 28px; cursor: nwse-resize; z-index: 10;
       opacity: 0; transition: opacity 0.15s;
-      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 40%, rgba(255,255,255,0.12) 55%, transparent 55%);
-      border-bottom-right-radius: 16px;
+      background: none;
+    }
+    #resize-handle::after {
+      content: '';
+      position: absolute; bottom: 4px; right: 4px;
+      width: 12px; height: 12px;
+      background: linear-gradient(135deg, transparent 38%, rgba(255,255,255,0.25) 38%, rgba(255,255,255,0.25) 52%, transparent 52%);
+      border-radius: 2px;
     }
     body:hover #resize-handle { opacity: 0.5; }
     #resize-handle:hover { opacity: 1 !important; }
@@ -137,12 +143,17 @@
         }
       }
 
+      function applyOpacity(val) {
+        document.body.style.setProperty('--tint-opacity', val);
+      }
+
       function updateWidgetSettings(patch) {
         const ex = utools.db.get('widget-settings') || {};
         const doc = {
           _id: 'widget-settings',
           theme: ex.theme || 'auto',
           tint: ex.tint || 'black',
+          tintOpacity: ex.tintOpacity,
           zOrder: ex.zOrder || 'top',
           ...patch
         };
@@ -155,6 +166,7 @@
       const st = utools.db.get('widget-settings') || {};
       applyTheme(st.theme || 'auto');
       applyTint(st.tint || 'black');
+      if (st.tintOpacity != null) applyOpacity(st.tintOpacity);
 
       // 创建并渲染模块
       const module = new info.cls();
@@ -243,6 +255,7 @@
         const settings = utools.db.get('widget-settings') || {};
         const curTheme = settings.theme || 'auto';
         const curTint = settings.tint || 'black';
+        const curOpacity = settings.tintOpacity != null ? settings.tintOpacity : (curTint === 'white' ? 0.38 : 0.42);
         const themes = [
           { value: 'auto', label: '跟随系统', icon: '🖥️' },
           { value: 'dark', label: '深色', icon: '🌙' },
@@ -252,6 +265,8 @@
           { value: 'black', label: '黑底', icon: '⬛' },
           { value: 'white', label: '白底', icon: '⬜' }
         ];
+
+        let rangeVal = curOpacity;
 
         const overlay = document.createElement('div');
         overlay.className = 'widget-settings-overlay';
@@ -278,10 +293,31 @@
                 `).join('')}
               </div>
             </div>
+            <div class="setting-section" style="margin-top:12px">
+              <div class="setting-label">遮罩浓度 <span style="font-weight:400;color:var(--text-tertiary)">（${Math.round(rangeVal * 100)}%）</span></div>
+              <div class="setting-range-row">
+                <span style="font-size:13px">🫥</span>
+                <input type="range" id="tint-opacity-range" min="5" max="95" value="${Math.round(rangeVal * 100)}">
+                <span style="font-size:13px">⬛</span>
+              </div>
+            </div>
             <div class="setting-hint">右键任意模块可再次打开设置；📌 按钮用于切换窗口层级。</div>
           </div>
         `;
         document.body.appendChild(overlay);
+
+        const rangeInput = overlay.querySelector('#tint-opacity-range');
+        const rangeLabel = overlay.querySelector('.setting-label span');
+
+        rangeInput.addEventListener('input', () => {
+          rangeVal = parseInt(rangeInput.value) / 100;
+          applyOpacity(rangeVal);
+          if (rangeLabel) rangeLabel.textContent = `（${rangeInput.value}%）`;
+        });
+
+        rangeInput.addEventListener('change', () => {
+          updateWidgetSettings({ tintOpacity: rangeVal });
+        });
 
         overlay.querySelectorAll('.theme-option[data-theme]').forEach(btn => {
           btn.addEventListener('click', (ev) => {
