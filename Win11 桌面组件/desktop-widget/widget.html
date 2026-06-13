@@ -144,7 +144,7 @@
       }
 
       function applyOpacity(val) {
-        document.body.style.setProperty('--tint-opacity', val);
+        document.body.style.setProperty('--tint-opacity', String(val));
       }
 
       function updateWidgetSettings(patch) {
@@ -153,7 +153,7 @@
           _id: 'widget-settings',
           theme: ex.theme || 'auto',
           tint: ex.tint || 'black',
-          tintOpacity: ex.tintOpacity,
+          tintOpacity: ex.tintOpacity != null ? ex.tintOpacity : undefined,
           zOrder: ex.zOrder || 'top',
           ...patch
         };

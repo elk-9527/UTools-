@@ -107,39 +107,6 @@ class QuickLaunchModule extends WidgetModule {
 
     const overlay = document.createElement('div');
     overlay.className = 'ql-dialog-overlay';
-
-    const updateUI = () => {
-      const tabs = overlay.querySelectorAll('.ql-type-tab');
-      if (tabs.length > 0) tabs.forEach(t => {
-        t.classList.toggle('active', t.dataset.type === targetType);
-      });
-
-      const browseBtn = overlay.querySelector('#ql-browse');
-      const urlInput = overlay.querySelector('#ql-target-input');
-      const nameInput = overlay.querySelector('#ql-name-input');
-
-      if (!browseBtn || !urlInput) return;
-
-      if (targetType === 'url') {
-        // 网址模式：不用系统浏览按钮，输入框可手填
-        browseBtn.style.display = 'none';
-        urlInput.style.display = '';
-        urlInput.readOnly = false;
-        urlInput.placeholder = '输入网址，如 https://www.baidu.com';
-        urlInput.value = '';
-      } else if (targetType === 'app' || targetType === 'folder') {
-        browseBtn.style.display = '';
-        urlInput.placeholder = '点击浏览选择文件...';
-        urlInput.readOnly = true;
-        if (targetPath) {
-          urlInput.style.display = '';
-          urlInput.value = targetPath;
-        } else {
-          urlInput.style.display = 'none';
-        }
-      }
-    };
-
     overlay.innerHTML = `
       <div class="ql-dialog">
         <h3>🚀 添加快捷方式</h3>
@@ -148,9 +115,9 @@ class QuickLaunchModule extends WidgetModule {
           <button class="ql-type-tab" data-type="folder">📁 文件夹</button>
           <button class="ql-type-tab" data-type="url">🌐 网址</button>
         </div>
-        <input class="input" id="ql-name-input" placeholder="快捷方式名称">
+        <input class="input" id="ql-name-input" placeholder="快捷方式名称" autocomplete="off">
         <div class="input-row">
-          <input class="input" id="ql-target-input" placeholder="点击浏览选择文件..." readonly>
+          <input class="input" id="ql-target-input" placeholder="点击浏览选择文件..." readonly autocomplete="off">
           <button class="btn" id="ql-browse">浏览</button>
         </div>
         <div class="btn-row">
@@ -159,61 +126,83 @@ class QuickLaunchModule extends WidgetModule {
         </div>
       </div>
     `;
-
     document.body.appendChild(overlay);
 
-    // 类型切换（必须在 appendChild 之后绑定）
-    overlay.querySelectorAll('.ql-type-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        targetType = tab.dataset.type;
+    const nameInput   = overlay.querySelector('#ql-name-input');
+    const targetInput = overlay.querySelector('#ql-target-input');
+    const browseBtn   = overlay.querySelector('#ql-browse');
+    const confirmBtn  = overlay.querySelector('#ql-confirm');
+    const cancelBtn   = overlay.querySelector('#ql-cancel');
+    const tabs        = overlay.querySelectorAll('.ql-type-tab');
+
+    // 根据当前类型刷新输入框状态
+    function refreshInputs() {
+      // tab 高亮
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.type === targetType));
+
+      if (targetType === 'url') {
+        browseBtn.style.display = 'none';
+        targetInput.readOnly = false;
+        targetInput.value = '';               // 清空以供用户填写
+        targetInput.placeholder = '输入网址，如 https://www.baidu.com';
+        targetInput.style.display = '';
+      } else {
+        // app / folder
+        browseBtn.style.display = '';
+        targetInput.readOnly = true;
+        targetInput.placeholder = targetType === 'app'
+          ? '点击浏览选择 .exe 或 .lnk 文件'
+          : '点击浏览选择文件夹';
+        targetInput.value = targetPath || '';
+        targetInput.style.display = targetPath ? '' : 'none';
+      }
+    }
+
+    // tab 点击
+    tabs.forEach(t => {
+      t.addEventListener('click', () => {
+        targetType = t.dataset.type;
         targetPath = '';
-        updateUI();
+        refreshInputs();
       });
     });
 
-    // 浏览按钮
-    overlay.querySelector('#ql-browse').addEventListener('click', () => {
+    // 浏览
+    browseBtn.addEventListener('click', () => {
       if (targetType === 'app') {
         const picked = utools.showOpenDialog({
           filters: [{ name: '可执行文件', extensions: ['exe', 'lnk'] }],
           properties: ['openFile']
         });
-        if (picked && picked[0]) {
-          targetPath = picked[0];
-          updateUI();
-        }
+        if (picked && picked[0]) { targetPath = picked[0]; refreshInputs(); }
       } else if (targetType === 'folder') {
         const picked = utools.showOpenDialog({
           properties: ['openDirectory']
         });
-        if (picked && picked[0]) {
-          targetPath = picked[0];
-          updateUI();
-        }
+        if (picked && picked[0]) { targetPath = picked[0]; refreshInputs(); }
       }
     });
 
-    // 取消
-    overlay.querySelector('#ql-cancel').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.remove();
-    });
-
     // 确认
-    overlay.querySelector('#ql-confirm').addEventListener('click', () => {
-      const nameEl = overlay.querySelector('#ql-name-input');
-      const targetEl = overlay.querySelector('#ql-target-input');
-      const name = nameEl.value.trim();
-      const target = targetType === 'url' ? targetEl.value.trim() : targetPath;
+    confirmBtn.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      const target = targetType === 'url' ? targetInput.value.trim() : targetPath;
 
-      if (!name) { nameEl.focus(); return; }
-      if (!target) { targetEl.focus(); return; }
+      if (!name)  { nameInput.focus(); return; }
+      if (!target) { targetInput.focus(); return; }
 
       this._addShortcut(name, targetType, target);
       overlay.remove();
     });
 
-    updateUI();
+    // 取消
+    cancelBtn.addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+
+    // 初始状态
+    refreshInputs();
   }
 
   _addShortcut(name, targetType, target) {
