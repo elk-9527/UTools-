@@ -89,6 +89,14 @@
             applyZOrder(win, zOrder);
             win.focus();
             console.log(`[DesktopWidget] ${modConfig.name} 显示完成, zOrder=${zOrder}`);
+
+            // 桌面钉住：监听 hide/minimize 立即恢复，防止"显示桌面"让窗口消失
+            win.on('hide', () => {
+              try { if (win && !win.isDestroyed()) win.show(); } catch(e) {}
+            });
+            win.on('minimize', () => {
+              try { if (win && !win.isDestroyed()) win.restore(); } catch(e) {}
+            });
           }
         }
       );
