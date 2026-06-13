@@ -34,6 +34,36 @@
   border: 1px solid transparent;
 }
 
+/* 删除按钮 — hover 时显示在右上角 */
+.ql-delete-btn {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 80, 80, 0.85);
+  color: #fff;
+  font-size: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: all 0.15s;
+  z-index: 2;
+  line-height: 1;
+  padding: 0;
+}
+
+.ql-item:hover .ql-delete-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ql-delete-btn:hover {
+  background: rgba(255, 50, 50, 1);
+  transform: scale(1.15);
+}
+
 .ql-item:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--border-subtle);

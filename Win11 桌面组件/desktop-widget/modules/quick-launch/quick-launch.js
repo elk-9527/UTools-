@@ -42,6 +42,7 @@ class QuickLaunchModule extends WidgetModule {
     for (const s of this._shortcuts) {
       html += `
         <div class="ql-item" data-id="${s._id}" title="${esc(s.name)}">
+          <button class="ql-delete-btn" data-id="${s._id}">✕</button>
           <div class="ql-icon-wrapper">
             ${typeIcons[s.targetType] || '📦'}
             <span class="ql-type-dot ${typeDots[s.targetType] || ''}"></span>
@@ -64,16 +65,16 @@ class QuickLaunchModule extends WidgetModule {
 
     // 绑定点击事件
     this.container.querySelectorAll('.ql-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        // 如果点击的是删除按钮，删除而不是启动
+        if (e.target.classList.contains('ql-delete-btn')) {
+          e.stopPropagation();
+          this._removeShortcut(e.target.dataset.id);
+          return;
+        }
         const id = item.dataset.id;
         const sc = this._shortcuts.find(s => s._id === id);
         if (sc) this._launch(sc);
-      });
-
-      item.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        e.stopPropagation();  // 阻止冒泡到全局，防止设置面板覆盖删除菜单
-        this._showItemMenu(e, item.dataset.id);
       });
     });
 
@@ -228,39 +229,6 @@ class QuickLaunchModule extends WidgetModule {
     if (doc) utools.db.remove(doc);
     else utools.db.remove(id);
     this._renderUI();
-  }
-
-  _showItemMenu(e, id) {
-    const sc = this._shortcuts.find(s => s._id === id);
-    if (!sc) return;
-
-    const menu = document.createElement('div');
-    menu.className = 'context-menu';
-    menu.style.left = e.clientX + 'px';
-    menu.style.top = e.clientY + 'px';
-    menu.innerHTML = `
-      <div class="menu-item" style="opacity:0.6;cursor:default">${sc.name}</div>
-      <div class="menu-divider"></div>
-      <div class="menu-item" data-action="delete">🗑 删除</div>
-    `;
-
-    menu.addEventListener('click', (ev) => {
-      const action = ev.target.closest('.menu-item')?.dataset.action;
-      if (action === 'delete') {
-        this._removeShortcut(id);
-      }
-      menu.remove();
-    });
-
-    document.body.appendChild(menu);
-
-    const closeHandler = (ev) => {
-      if (!menu.contains(ev.target)) {
-        menu.remove();
-        document.removeEventListener('click', closeHandler);
-      }
-    };
-    setTimeout(() => document.addEventListener('click', closeHandler), 0);
   }
 
   destroy() {
