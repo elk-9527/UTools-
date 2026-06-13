@@ -82,10 +82,10 @@
         },
         () => {
           if (win && !win.isDestroyed()) {
-            win.show();
+            win.showInactive();            // 不抢焦点
+            win.setFocusable(false);       // 不让窗口获得焦点，防止被"显示桌面"视为可隐藏窗口
             const zOrder = getGlobalZOrder();
             applyZOrder(win, zOrder);
-            win.focus();
             console.log(`[DesktopWidget] ${modConfig.name} 显示完成, zOrder=${zOrder}`);
           }
         }
@@ -128,25 +128,20 @@
         const w = widgetWindows[k];
         if (!w || w.isDestroyed()) continue;
         try {
-          // Win+D / "显示桌面" 会最小化所有窗口
-          if (w.isMinimized()) {
-            w.restore();
-          }
-          if (!w.isVisible()) {
-            w.show();
-            w.restore();
-          }
-          // 补偿层级 — 底层窗口可能在 restore 后被提到前面
+          if (w.isMinimized()) w.restore();
+          if (!w.isVisible()) w.showInactive();
+          // 层级修正
           const z = getGlobalZOrder();
           if (z === 'bottom') {
             if (w.isAlwaysOnTop()) w.setAlwaysOnTop(false);
             try { w.moveBottom(); } catch(e) {}
-          } else if (z === 'top' && !w.isAlwaysOnTop()) {
-            w.setAlwaysOnTop(true, 'screen-saver');
+            if (w.isFocused()) { try { w.blur(); } catch(e) {} }
+          } else if (z === 'top') {
+            if (!w.isAlwaysOnTop()) w.setAlwaysOnTop(true, 'screen-saver');
           }
         } catch(e) {}
       }
-    }, 200);
+    }, 150);
 
     // ======== 插件生命周期 ========
     utools.onPluginEnter(({ code }) => {
@@ -167,9 +162,9 @@
         for (const k of Object.keys(widgetWindows)) {
           try {
             const zOrder = getGlobalZOrder();
-            widgetWindows[k].show();
+            widgetWindows[k].showInactive();
+            if (zOrder === 'bottom') widgetWindows[k].setFocusable(false);
             applyZOrder(widgetWindows[k], zOrder);
-            widgetWindows[k].focus();
           } catch(e) {}
         }
         utools.hideMainWindow();

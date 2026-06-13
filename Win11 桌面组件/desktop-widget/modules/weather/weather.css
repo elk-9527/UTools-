@@ -16,26 +16,26 @@
 }
 
 .weather-icon {
-  font-size: 44px;
+  font-size: clamp(32px, 8vw, 52px);
   line-height: 1;
 }
 
 .weather-temp {
   font-family: var(--font-mono);
-  font-size: 40px;
+  font-size: clamp(32px, 7vw, 48px);
   font-weight: 200;
   color: var(--text-primary);
   line-height: 1;
 }
 
 .weather-temp sup {
-  font-size: 18px;
+  font-size: clamp(14px, 3vw, 18px);
   font-weight: 400;
   vertical-align: super;
 }
 
 .weather-desc {
-  font-size: 13px;
+  font-size: clamp(12px, 2vw, 14px);
   color: var(--text-secondary);
   margin-bottom: 12px;
 }
@@ -50,7 +50,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: clamp(11px, 1.8vw, 13px);
   color: var(--text-tertiary);
 }
 
@@ -59,7 +59,7 @@
 }
 
 .weather-city {
-  font-size: 11px;
+  font-size: clamp(11px, 1.8vw, 13px);
   color: var(--text-tertiary);
   margin-bottom: 10px;
   cursor: pointer;
@@ -74,7 +74,7 @@
 }
 
 .weather-city .edit-hint {
-  font-size: 10px;
+  font-size: clamp(10px, 1.5vw, 12px);
   opacity: 0;
   transition: opacity 0.15s;
 }
