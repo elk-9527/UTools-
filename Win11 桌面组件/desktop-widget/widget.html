@@ -30,51 +30,53 @@
     }
     /* 拖拽条 */
     #drag-handle {
-      position: absolute; top: 0; left: 0; right: 0; height: 28px;
+      position: absolute; top: 0; left: 0; right: 0; height: 26px;
       z-index: 5; -webkit-app-region: drag; cursor: move;
-      display: flex; align-items: center; padding: 0 8px;
+      display: flex; align-items: center; padding: 0 10px;
     }
     #drag-handle .module-title {
-      font-size: 11px; font-weight: 600; color: var(--text-tertiary);
-      letter-spacing: 0.5px; text-transform: uppercase;
-      margin-left: 6px;
+      font-size: 10px; font-weight: 600; color: var(--text-tertiary);
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-left: 5px;
     }
-    #drag-handle .module-icon { font-size: 14px; line-height: 1; }
+    #drag-handle .module-icon { font-size: 13px; line-height: 1; }
     #drag-handle .actions {
       margin-left: auto; display: flex; gap: 4px;
       -webkit-app-region: no-drag;
-      opacity: 0; transition: opacity 0.15s;
+      opacity: 0; transition: opacity 0.2s;
     }
     body:hover #drag-handle .actions { opacity: 1; }
     .action-btn {
-      width: 20px; height: 20px; border-radius: 6px; border: none;
-      background: rgba(255,255,255,0.06); color: var(--text-secondary);
-      cursor: pointer; font-size: 11px;
+      width: 18px; height: 18px; border-radius: 6px; border: none;
+      background: rgba(255,255,255,0.05); color: var(--text-tertiary);
+      cursor: pointer; font-size: 10px;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s, color 0.15s;
+      transition: all 0.15s;
     }
-    .action-btn:hover { background: rgba(255,100,100,0.25); color: #ff6b6b; }
-    .action-btn.zorder-btn:hover { background: rgba(100,160,255,0.20); color: var(--accent); }
+    .action-btn:hover { background: rgba(255,80,80,0.2); color: #ff6b6b; transform: scale(1.1); }
+    .action-btn.zorder-btn:hover { background: var(--accent-soft); color: var(--accent-solid); }
     /* 内容区 */
     #module-content {
-      position: absolute; top: 28px; left: 0; right: 0; bottom: 0;
-      padding: 4px 8px 8px;
+      position: absolute; top: 26px; left: 0; right: 0; bottom: 0;
+      padding: 4px 10px 8px;
+      z-index: 1;
     }
     /* 缩放手柄 — 加大 hitbox */
     #resize-handle {
       position: absolute; bottom: 0; right: 0;
-      width: 28px; height: 28px; cursor: nwse-resize; z-index: 10;
-      opacity: 0; transition: opacity 0.15s;
+      width: 24px; height: 24px; cursor: nwse-resize; z-index: 10;
+      opacity: 0; transition: opacity 0.2s;
       background: none;
     }
     #resize-handle::after {
       content: '';
-      position: absolute; bottom: 4px; right: 4px;
-      width: 12px; height: 12px;
-      background: linear-gradient(135deg, transparent 38%, rgba(255,255,255,0.25) 38%, rgba(255,255,255,0.25) 52%, transparent 52%);
-      border-radius: 2px;
+      position: absolute; bottom: 5px; right: 5px;
+      width: 8px; height: 8px;
+      border-right: 2px solid rgba(255,255,255,0.18);
+      border-bottom: 2px solid rgba(255,255,255,0.18);
+      border-radius: 0 0 2px 0;
     }
-    body:hover #resize-handle { opacity: 0.5; }
+    body:hover #resize-handle { opacity: 0.6; }
     #resize-handle:hover { opacity: 1 !important; }
     /* 加载提示 */
     #loading {

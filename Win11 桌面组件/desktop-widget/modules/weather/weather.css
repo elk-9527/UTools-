@@ -1,55 +1,65 @@
 /* ============================================
-   天气模块样式
+   天气模块 — 液态玻璃风格
    ============================================ */
 
 .weather-container {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .weather-main {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 
 .weather-icon {
-  font-size: clamp(32px, 8vw, 52px);
+  font-size: clamp(36px, 9vw, 56px);
   line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
 }
 
 .weather-temp {
   font-family: var(--font-mono);
-  font-size: clamp(32px, 7vw, 48px);
+  font-size: clamp(36px, 8vw, 52px);
   font-weight: 200;
   color: var(--text-primary);
   line-height: 1;
+  letter-spacing: -1px;
 }
 
 .weather-temp sup {
   font-size: clamp(14px, 3vw, 18px);
   font-weight: 400;
   vertical-align: super;
+  letter-spacing: 0;
 }
 
 .weather-desc {
   font-size: clamp(12px, 2vw, 14px);
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  font-weight: 500;
+  margin-bottom: 10px;
 }
 
 .weather-details {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 10px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
 }
 
 .weather-detail {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-size: clamp(11px, 1.8vw, 13px);
   color: var(--text-tertiary);
 }
@@ -61,26 +71,27 @@
 .weather-city {
   font-size: clamp(11px, 1.8vw, 13px);
   color: var(--text-tertiary);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: all 0.15s;
   display: flex;
   align-items: center;
   gap: 4px;
+  font-weight: 500;
 }
 
 .weather-city:hover {
-  color: var(--text-secondary);
+  color: var(--accent-solid);
 }
 
 .weather-city .edit-hint {
-  font-size: clamp(10px, 1.5vw, 12px);
+  font-size: clamp(9px, 1.4vw, 11px);
   opacity: 0;
   transition: opacity 0.15s;
 }
 
 .weather-city:hover .edit-hint {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .weather-forecast {
@@ -96,26 +107,37 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 6px 4px;
-  border-radius: 10px;
+  gap: 3px;
+  padding: 8px 4px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
   min-width: 0;
+  transition: all 0.15s;
+}
+
+.forecast-day:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border-card);
+  transform: translateY(-2px);
 }
 
 .forecast-day .day-label {
-  font-size: clamp(10px, 1.6vw, 12px);
+  font-size: clamp(9px, 1.5vw, 11px);
   color: var(--text-tertiary);
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .forecast-day .day-icon {
-  font-size: clamp(18px, 3.5vw, 22px);
+  font-size: clamp(20px, 4vw, 26px);
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.1));
 }
 
 .forecast-day .day-temps {
   font-size: clamp(10px, 1.6vw, 12px);
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .forecast-day .day-temps .high {
@@ -125,6 +147,7 @@
 
 .forecast-day .day-temps .low {
   color: var(--text-tertiary);
+  font-weight: 400;
 }
 
 .weather-loading {
@@ -134,20 +157,33 @@
   height: 100%;
   color: var(--text-tertiary);
   font-size: clamp(13px, 2.2vw, 15px);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 /* 离线提示条 */
 .weather-offline-bar {
-  font-size: clamp(10px, 1.6vw, 12px); color: var(--text-tertiary);
-  text-align: center; padding: 3px 6px; margin-bottom: 6px;
-  border-radius: 6px; background: rgba(255, 200, 60, 0.10);
+  font-size: clamp(10px, 1.6vw, 12px);
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 5px 10px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 200, 60, 0.08);
+  border: 1px solid rgba(255, 200, 60, 0.12);
 }
 
 /* 城市设置弹窗 */
 .weather-settings-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -161,31 +197,38 @@
 }
 
 .weather-settings-dialog {
-  background: rgba(30, 30, 44, 0.95);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
+  background: rgba(28, 28, 42, 0.92);
+  backdrop-filter: blur(48px) saturate(200%);
+  -webkit-backdrop-filter: blur(48px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
   padding: 20px 24px;
   min-width: 280px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  animation: dialogIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dialogIn {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) .weather-settings-dialog {
-    background: rgba(245, 242, 248, 0.95);
+    background: rgba(245, 242, 248, 0.92);
     border-color: rgba(0, 0, 0, 0.10);
   }
 }
 :root[data-theme="light"] .weather-settings-dialog {
-  background: rgba(245, 242, 248, 0.95);
+  background: rgba(245, 242, 248, 0.92);
   border-color: rgba(0, 0, 0, 0.10);
 }
 
 .weather-settings-dialog h3 {
   font-size: clamp(14px, 2.5vw, 16px);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   color: var(--text-primary);
+  font-weight: 700;
 }
 
 .weather-settings-dialog .input-row {
@@ -200,5 +243,6 @@
 .weather-settings-dialog .hint {
   font-size: clamp(10px, 1.8vw, 12px);
   color: var(--text-tertiary);
-  margin-top: 8px;
+  margin-top: 10px;
+  line-height: 1.5;
 }

@@ -1,11 +1,13 @@
 /* ============================================
-   日历模块
+   日历模块 — 液态玻璃风格
    ============================================ */
 
 .calendar-container {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .calendar-header {
@@ -13,47 +15,57 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+  padding: 0 2px;
 }
 
 .calendar-month-label {
   font-size: clamp(14px, 2.5vw, 16px);
   font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: 0.5px;
 }
 
 .calendar-nav-btn {
-  width: clamp(26px, 4vw, 30px);
-  height: clamp(26px, 4vw, 30px);
-  border-radius: 8px;
-  border: none;
-  background: rgba(255, 255, 255, 0.06);
+  width: clamp(26px, 4vw, 32px);
+  height: clamp(26px, 4vw, 32px);
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all 0.18s;
 }
 
 .calendar-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--text-primary);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-solid);
+  transform: scale(1.08);
+}
+
+.calendar-nav-btn:active {
+  transform: scale(0.96);
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 3px;
   flex: 1;
 }
 
 .calendar-day-header {
   text-align: center;
-  font-size: clamp(10px, 1.8vw, 12px);
-  font-weight: 600;
+  font-size: clamp(9px, 1.6vw, 11px);
+  font-weight: 700;
   color: var(--text-tertiary);
   padding: 4px 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .calendar-day {
@@ -61,17 +73,18 @@
   align-items: center;
   justify-content: center;
   font-size: clamp(12px, 2vw, 14px);
-  font-weight: 600;
-  min-height: clamp(24px, 4vw, 30px);
-  border-radius: 8px;
+  font-weight: 500;
+  min-height: clamp(26px, 4vw, 32px);
+  border-radius: 10px;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: all 0.12s;
+  transition: all 0.15s;
   position: relative;
 }
 
 .calendar-day:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
 }
 
 .calendar-day.today {
@@ -83,25 +96,28 @@
   content: '';
   position: absolute;
   top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: 26px; height: 26px;
+  width: clamp(22px, 3.5vw, 28px);
+  height: clamp(22px, 3.5vw, 28px);
   border-radius: 50%;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), rgba(96, 165, 250, 0.55));
+  box-shadow: 0 2px 12px var(--accent-glow);
   z-index: -1;
 }
 
 .calendar-day.other-month {
   color: var(--text-tertiary);
-  opacity: 0.4;
+  opacity: 0.35;
 }
 
 .calendar-day.has-todo::before {
   content: '';
   position: absolute;
-  bottom: 5px;
+  bottom: clamp(3px, 0.5vw, 5px);
   left: 50%;
   transform: translateX(-50%);
-  width: clamp(4px, 0.7vw, 6px);
-  height: clamp(4px, 0.7vw, 6px);
+  width: clamp(4px, 0.7vw, 5px);
+  height: clamp(4px, 0.7vw, 5px);
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-solid);
+  box-shadow: 0 0 6px var(--accent-glow);
 }
