@@ -23,7 +23,7 @@
     // 读取全局层级设置
     function getGlobalZOrder() {
       const settings = utools.db.get('widget-settings') || {};
-      return settings.zOrder || 'top';
+      return settings.zOrder || 'bottom';  // 默认底层，不挡其他窗口
     }
 
     // 应用层级到指定窗口
@@ -31,14 +31,13 @@
       if (!win || win.isDestroyed()) return;
       if (level === 'top') {
         win.setAlwaysOnTop(true, 'screen-saver');
-        console.log('[DesktopWidget] 窗口设置为顶层');
       } else if (level === 'normal') {
         win.setAlwaysOnTop(false);
-        console.log('[DesktopWidget] 窗口设置为正常层级');
-      } else if (level === 'bottom') {
-        // 取消置顶即可让窗口沉底（桌面级 type='desktop' 下仍然钉在桌面）
+        win.moveTop();
+      } else {
+        // 底层：取消置顶 + 沉到最底
         win.setAlwaysOnTop(false);
-        console.log('[DesktopWidget] 窗口设置为底层');
+        try { win.moveBottom(); } catch(e) {}
       }
     }
 
@@ -70,9 +69,10 @@
           maxWidth: 600, maxHeight: 600,
           frame: false,
           transparent: true,
-          alwaysOnTop: true,
+          alwaysOnTop: false,  // 默认底层，不遮挡其他窗口
           skipTaskbar: true,
           resizable: false,
+          minimizable: false,
           hasShadow: false,
           thickFrame: false,
           backgroundColor: '#00000000',
@@ -128,9 +128,22 @@
         const w = widgetWindows[k];
         if (!w || w.isDestroyed()) continue;
         try {
-          // Win+D / "显示桌面" 会最小化所有窗口，检测到后立即恢复
-          if (w.isMinimized()) { w.restore(); w.show(); }
-          else if (!w.isVisible()) { w.show(); }
+          // Win+D / "显示桌面" 会最小化所有窗口
+          if (w.isMinimized()) {
+            w.restore();
+          }
+          if (!w.isVisible()) {
+            w.show();
+            w.restore();
+          }
+          // 补偿层级 — 底层窗口可能在 restore 后被提到前面
+          const z = getGlobalZOrder();
+          if (z === 'bottom') {
+            if (w.isAlwaysOnTop()) w.setAlwaysOnTop(false);
+            try { w.moveBottom(); } catch(e) {}
+          } else if (z === 'top' && !w.isAlwaysOnTop()) {
+            w.setAlwaysOnTop(true, 'screen-saver');
+          }
         } catch(e) {}
       }
     }, 200);
