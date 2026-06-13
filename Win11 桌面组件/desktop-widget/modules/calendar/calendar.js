@@ -130,7 +130,7 @@ class CalendarModule extends WidgetModule {
         if (!dateStr) return;
         // 写入 db 桥接文档，跨窗口通知待办模块
         const existing = utools.db.get('calendar-bridge');
-        const doc = { _id: 'calendar-bridge', date: dateStr, ts: Date.now() };
+        const doc = { _id: 'calendar-bridge', date: dateStr, _ts: Date.now() };
         if (existing && existing._rev) doc._rev = existing._rev;
         utools.db.put(doc);
       });
@@ -138,9 +138,6 @@ class CalendarModule extends WidgetModule {
   }
 
   destroy() {
-    if (this._todoChangedHandler) {
-      window.removeEventListener('todo:changed', this._todoChangedHandler);
-    }
     if (this._dbSyncTimer) { clearInterval(this._dbSyncTimer); }
     super.destroy();
   }

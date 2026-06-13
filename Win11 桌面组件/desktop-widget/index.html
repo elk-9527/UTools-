@@ -11,11 +11,11 @@
      * 为每个模块创建独立的桌面悬浮窗（直接呈现在 Win11 桌面上）
      */
     const MODULE_CONFIGS = [
-      { id: 'clock',         name: '时钟',   w: 260, h: 160 },
-      { id: 'calendar',      name: '日历',   w: 280, h: 320 },
-      { id: 'weather',       name: '天气',   w: 280, h: 240 },
-      { id: 'todo',          name: '待办',   w: 280, h: 340 },
-      { id: 'quick-launch',  name: '快捷启动', w: 320, h: 240 }
+      { id: 'clock',         name: '时钟',     w: 260, h: 160, x: 40,  y: 60 },
+      { id: 'calendar',      name: '日历',     w: 280, h: 320, x: 320, y: 60 },
+      { id: 'weather',       name: '天气',     w: 280, h: 240, x: 620, y: 60 },
+      { id: 'todo',          name: '待办',     w: 280, h: 340, x: 40,  y: 260 },
+      { id: 'quick-launch',  name: '快捷启动', w: 320, h: 240, x: 340, y: 410 }
     ];
 
     const widgetWindows = {};
@@ -45,13 +45,19 @@
     }
 
     function createWidgetWindow(modConfig) {
+      if (widgetWindows[modConfig.id] && !widgetWindows[modConfig.id].isDestroyed()) {
+        return widgetWindows[modConfig.id];
+      }
+
       const layout = utools.db.get('widget-layout');
       const saved = layout?.modules?.[modConfig.id];
       const display = utools.getPrimaryDisplay();
       const workArea = display.workAreaSize;
 
-      const x = saved?.x ?? Math.min(40 + Math.random() * 200, workArea.width - modConfig.w - 40);
-      const y = saved?.y ?? Math.min(60 + Math.random() * 200, workArea.height - modConfig.h - 60);
+      const defaultX = Math.min(modConfig.x, Math.max(0, workArea.width - modConfig.w - 24));
+      const defaultY = Math.min(modConfig.y, Math.max(0, workArea.height - modConfig.h - 24));
+      const x = saved?.x ?? defaultX;
+      const y = saved?.y ?? defaultY;
       const w = saved?.w || modConfig.w;
       const h = saved?.h || modConfig.h;
 
@@ -71,6 +77,7 @@
           resizable: false,
           hasShadow: false,
           thickFrame: false,
+          backgroundColor: '#00000000',
           webPreferences: {
             preload: 'preload.js'
           }
@@ -94,9 +101,9 @@
     try {
       const { ipcRenderer } = require('electron');
       ipcRenderer.on('zorder-change', (event, data) => {
-        console.log('[DesktopWidget] 收到层级变更请求:', data);
-        if (!data || !data.zOrder) return;
-        const zOrder = data.zOrder;
+        const zOrder = typeof data === 'string' ? data : data?.zOrder;
+        console.log('[DesktopWidget] 收到层级变更请求:', zOrder);
+        if (!zOrder) return;
 
         // 应用到所有窗口
         for (const k of Object.keys(widgetWindows)) {
@@ -121,15 +128,25 @@
     utools.onPluginEnter(({ code }) => {
       if (code !== 'desktop-widget') return;
 
-      // 已有存活窗口：显示并聚焦
+      // 已有存活窗口：补齐缺失窗口，然后显示并聚焦
       const existingKeys = Object.keys(widgetWindows).filter(k => {
         const w = widgetWindows[k];
         return w && !w.isDestroyed();
       });
 
       if (existingKeys.length > 0) {
-        for (const k of existingKeys) {
-          try { widgetWindows[k].show(); widgetWindows[k].focus(); } catch(e) {}
+        for (const cfg of MODULE_CONFIGS) {
+          if (!widgetWindows[cfg.id] || widgetWindows[cfg.id].isDestroyed()) {
+            try { createWidgetWindow(cfg); } catch(e) { console.error(`[DesktopWidget] 补创建 ${cfg.name} 失败:`, e); }
+          }
+        }
+        for (const k of Object.keys(widgetWindows)) {
+          try {
+            const zOrder = getGlobalZOrder();
+            widgetWindows[k].show();
+            applyZOrder(widgetWindows[k], zOrder);
+            widgetWindows[k].focus();
+          } catch(e) {}
         }
         utools.hideMainWindow();
         return;

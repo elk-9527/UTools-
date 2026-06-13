@@ -171,6 +171,17 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .weather-settings-dialog {
+    background: rgba(245, 242, 248, 0.95);
+    border-color: rgba(0, 0, 0, 0.10);
+  }
+}
+:root[data-theme="light"] .weather-settings-dialog {
+  background: rgba(245, 242, 248, 0.95);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+
 .weather-settings-dialog h3 {
   font-size: 15px;
   margin-bottom: 12px;

@@ -22,8 +22,13 @@ class QuickLaunchModule extends WidgetModule {
   }
 
   _loadShortcuts() {
-    this._shortcuts = utools.db.allDocs('ql-')
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
+    try {
+      this._shortcuts = utools.db.allDocs('ql-')
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+    } catch (err) {
+      console.error('[QuickLaunch] 读取快捷方式失败:', err);
+      this._shortcuts = [];
+    }
     this._renderUI();
   }
 
